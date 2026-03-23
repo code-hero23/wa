@@ -12,7 +12,7 @@ const connection = new IORedis({
 const messageWorker = new Worker(
   "messages",
   async (job) => {
-    const { messageInternalId, phone, template, name, params } = job.data;
+    const { messageInternalId, campaignId, phone, template, name, params } = job.data;
     console.log(`Processing message to ${phone} with template ${template}`);
     
     try {
