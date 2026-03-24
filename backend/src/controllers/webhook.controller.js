@@ -23,8 +23,16 @@ exports.verifyWebhook = (req, res) => {
 // Meta Webhook Events (Messages & Status Updates)
 exports.handleWebhook = async (req, res) => {
   console.log('--- NEW WEBHOOK EVENT ---');
-  console.log(JSON.stringify(req.body, null, 2));
+  console.log('Method:', req.method);
+  console.log('URL:', req.url);
+  console.log('Headers:', JSON.stringify(req.headers, null, 2));
+  console.log('Body:', JSON.stringify(req.body, null, 2));
   
+  if (!req.body || Object.keys(req.body).length === 0) {
+    console.log('WARNING: Received empty body at webhook endpoint.');
+    return res.sendStatus(200); // Meta expects 200 even if empty
+  }
+
   const value = req.body.entry?.[0]?.changes?.[0]?.value;
 
   // 1. Handle Incoming Messages
