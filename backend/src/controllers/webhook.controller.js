@@ -32,9 +32,19 @@ exports.handleWebhook = async (req, res) => {
   if (incomingMessages && Array.isArray(incomingMessages)) {
     for (let msg of incomingMessages) {
       const { from: phone, text, id: message_id, type } = msg;
-      const content = text?.body || "";
+      let content = "";
 
-      console.log(`Incoming message from ${phone}: ${content}`);
+      if (type === "text") {
+        content = text?.body || "";
+      } else if (type === "button") {
+        content = msg.button?.text || "[Button Click]";
+      } else if (msg.interactive) {
+        content = msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "[Interactive Message]";
+      } else {
+        content = `[Received ${type} message]`;
+      }
+
+      console.log(`[WEBHOOK] Incoming ${type} from ${phone}: ${content}`);
 
       try {
         // 1.1 Find Contact (Handling country code mismatches)

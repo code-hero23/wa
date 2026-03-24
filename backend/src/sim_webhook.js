@@ -25,7 +25,7 @@ async function test() {
   };
 
   try {
-    const res = await axios.post('http://localhost:5000/webhook', payload);
+    const res = await axios.post('http://localhost:5000/api/webhook', payload);
     console.log('Response Status:', res.status);
     console.log('Success! The backend logic is working locally.');
   } catch (err) {

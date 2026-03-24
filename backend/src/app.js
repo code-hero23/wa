@@ -17,7 +17,7 @@ app.use(express.json());
 // Routes
 app.use("/api/campaigns", require("./routes/campaign.routes"));
 app.use("/api/chats", require("./routes/chat.routes"));
-app.use("/webhook", require("./routes/webhook.routes"));
+app.use("/api/webhook", require("./routes/webhook.routes"));
 
 app.get("/", (req, res) => {
   res.send("WhatsApp Blast Backend is running.");
