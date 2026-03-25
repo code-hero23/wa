@@ -11,9 +11,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 
+const authMiddleware = require("./middlewares/auth.middleware");
+
 // Routes
-app.use("/api/campaigns", require("./routes/campaign.routes"));
-app.use("/api/chats", require("./routes/chat.routes"));
+app.use("/api/auth", require("./routes/auth.routes"));
+app.use("/api/campaigns", authMiddleware, require("./routes/campaign.routes"));
+app.use("/api/chats", authMiddleware, require("./routes/chat.routes"));
 app.use("/api/webhook", require("./routes/webhook.routes"));
 
 app.get("/", (req, res) => {
