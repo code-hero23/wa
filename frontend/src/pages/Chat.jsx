@@ -112,90 +112,119 @@ const Chat = () => {
   const messageGroups = groupMessagesByDate(messages);
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-[#fff] rounded-2xl overflow-hidden shadow-xl border border-gray-100 font-sans">
+    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100/50 font-sans">
       {/* Sidebar */}
-      <div className="w-[350px] border-r border-[#f2f2f2] flex flex-col bg-white">
+      <div className="w-[400px] border-r border-[#e9edef] flex flex-col bg-white">
         {/* Sidebar Header */}
-        <div className="p-4 bg-[#f0f2f5] flex justify-between items-center border-b border-gray-200">
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 shadow-inner">A</div>
-          <div className="flex space-x-4 text-[#54656f]">
-            <MoreVertical className="w-5 h-5 cursor-pointer hover:text-blue-600 transition-colors" />
+        <div className="p-3 bg-[#f0f2f5] flex justify-between items-center">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center font-bold text-white shadow-md border-2 border-white">A</div>
+            <span className="font-bold text-[#111b21] tracking-tight">Chats</span>
+          </div>
+          <div className="flex space-x-2 text-[#54656f]">
+            <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors">
+              <MoreVertical className="w-5 h-5" />
+            </div>
           </div>
         </div>
 
-        {/* Search & Filters */}
-        <div className="px-3 py-2 space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8696a0]" />
+        {/* Search Bar */}
+        <div className="px-3 py-2">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8696a0] group-focus-within:text-[#00a884] transition-colors" />
             <input 
               type="text" 
               placeholder="Search or start new chat" 
-              className="w-full pl-10 pr-4 py-1.5 bg-[#f0f2f5] rounded-lg text-sm focus:outline-none placeholder:text-[#8696a0]"
+              className="w-full pl-10 pr-4 py-2 bg-[#f0f2f5] border-none rounded-xl text-sm focus:outline-none focus:bg-white focus:ring-1 focus:ring-gray-200 transition-all placeholder:text-[#8696a0] font-medium"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+        </div>
+
+        {/* Filters Bar */}
+        <div className="px-4 py-2 flex items-center space-x-2 overflow-x-auto no-scrollbar border-b border-[#f2f2f2]">
+          <FilterButton 
+            active={filter === 'all'} 
+            onClick={() => { setFilter('all'); setSelectedCampaignId(''); }}
+            label="All"
+          />
+          <FilterButton 
+            active={filter === 'unread'} 
+            onClick={() => { setFilter('unread'); setSelectedCampaignId(''); }}
+            label="Unread"
+          />
           
-          <div className="flex items-center space-x-2 pb-1 overflow-x-auto no-scrollbar">
+          {/* Custom Campaign Selector */}
+          <div className="relative group">
             <button 
-              onClick={() => setFilter('all')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filter === 'all' ? 'bg-[#00a884] text-white shadow-md' : 'bg-gray-100 text-[#54656f] hover:bg-gray-200'}`}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1 border
+                ${filter === 'campaign' 
+                  ? 'bg-[#00a884] text-white border-[#00a884] shadow-sm' 
+                  : 'bg-white text-[#54656f] border-gray-200 hover:bg-gray-50'}`}
             >
-              All
+              <Tag className={`w-3 h-3 ${filter === 'campaign' ? 'text-white' : 'text-[#8696a0]'}`} />
+              <span>{filter === 'campaign' ? (campaigns.find(c => c.id == selectedCampaignId)?.name || 'Campaign') : 'Campaigns'}</span>
+              <ChevronDown className="w-3 h-3 ml-1 opacity-60" />
             </button>
-            <button 
-              onClick={() => setFilter('unread')}
-              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${filter === 'unread' ? 'bg-[#00a884] text-white shadow-md' : 'bg-gray-100 text-[#54656f] hover:bg-gray-200'}`}
-            >
-              Unread
-            </button>
-            <div className="relative flex-1 min-w-[120px]">
-              <select 
-                value={filter === 'campaign' ? selectedCampaignId : ''}
-                onChange={(e) => {
-                  if (e.target.value === '') {
-                    setFilter('all');
-                  } else {
-                    setSelectedCampaignId(e.target.value);
-                    setFilter('campaign');
-                  }
-                }}
-                className={`w-full pl-2 pr-6 py-1 bg-gray-100 border-none rounded-full text-xs font-semibold text-[#54656f] appearance-none focus:outline-none cursor-pointer transition-all ${filter === 'campaign' ? 'bg-[#00a884] text-white shadow-md' : 'hover:bg-gray-200'}`}
-              >
-                <option value="">Campaigns</option>
+            <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-left transform scale-95 group-hover:scale-100">
+              <div className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Select Campaign</div>
+              <div className="max-h-60 overflow-y-auto custom-scrollbar">
                 {campaigns.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <div 
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCampaignId(c.id);
+                      setFilter('campaign');
+                    }}
+                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm font-semibold transition-colors flex items-center justify-between
+                      ${selectedCampaignId == c.id ? 'text-[#00a884] bg-emerald-50/50' : 'text-gray-700'}`}
+                  >
+                    <span className="truncate pr-2">{c.name}</span>
+                    {selectedCampaignId == c.id && <div className="w-1.5 h-1.5 bg-[#00a884] rounded-full"></div>}
+                  </div>
                 ))}
-              </select>
-              <ChevronDown className={`absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 pointer-events-none ${filter === 'campaign' ? 'text-white' : 'text-[#54656f]'}`} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Chat List */}
-        <div className="flex-1 overflow-y-auto bg-white">
+        <div className="flex-1 overflow-y-auto bg-white custom-scrollbar">
           {chats.filter(c => c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.phone.includes(searchTerm)).map(chat => (
             <div 
               key={chat.id}
               onClick={() => setActiveChat(chat)}
-              className={`flex items-center px-4 py-3 cursor-pointer transition-all hover:bg-[#f5f6f6] ${activeChat?.id === chat.id ? 'bg-[#f0f2f5]' : ''}`}
+              className={`flex items-center px-4 py-3.5 cursor-pointer transition-all border-b border-[#f2f2f2]/60 relative group
+                ${activeChat?.id === chat.id ? 'bg-[#f0f2f5]' : 'hover:bg-[#f5f6f6]'}`}
             >
-              <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-50 border border-blue-50 flex items-center justify-center text-[#111] font-bold text-lg shadow-sm">
-                {chat.name[0]}
+              <div className="relative flex-shrink-0">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-tr from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center text-[#111] font-bold text-xl shadow-inner overflow-hidden uppercase italic">
+                   {chat.name[0]}
+                </div>
+                {chat.unread_count > 0 && <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#25D366] border-2 border-white rounded-full"></div>}
               </div>
-              <div className="ml-3 flex-1 border-b border-[#f2f2f2] pb-3">
+              
+              <div className="ml-4 flex-1 min-w-0 py-0.5">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-semibold text-[#111b21]">{chat.name}</span>
-                  <span className={`text-[11px] ${chat.unread_count > 0 ? 'text-[#00a884] font-bold' : 'text-[#667781]'}`}>
+                  <span className={`font-bold text-[16px] truncate pr-2 ${chat.unread_count > 0 ? 'text-[#111b21]' : 'text-[#111b21]/90'}`}>
+                    {chat.name}
+                  </span>
+                  <span className={`text-[11px] font-bold tracking-tight whitespace-nowrap ${chat.unread_count > 0 ? 'text-[#00a884]' : 'text-gray-400'}`}>
                     {chat.last_message_at ? format(new Date(chat.last_message_at), 'HH:mm') : ''}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <p className="text-sm text-[#667781] truncate w-48 font-medium">
-                    {chat.last_message || 'No messages yet'}
-                  </p>
+                  <div className="flex items-center space-x-1 overflow-hidden">
+                    <p className={`text-sm truncate font-medium ${chat.unread_count > 0 ? 'text-[#111b21] font-bold' : 'text-[#667781]'}`}>
+                      {chat.last_message || 'No messages yet'}
+                    </p>
+                  </div>
                   {chat.unread_count > 0 && (
-                    <span className="bg-[#25D366] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[1.2rem] text-center shadow-sm">
+                    <span className="bg-[#25D366] text-white text-[10px] font-black px-2 py-1 rounded-full min-w-[1.2rem] text-center shadow-lg shadow-emerald-100 leading-none">
                       {chat.unread_count}
                     </span>
                   )}
@@ -204,9 +233,9 @@ const Chat = () => {
             </div>
           ))}
           {chats.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 p-8 text-center">
-              <Inbox className="w-12 h-12 mb-3 opacity-20" />
-              <p className="text-sm font-medium">No conversations found</p>
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 p-12 text-center opacity-40">
+              <Inbox className="w-16 h-16 mb-4 stroke-[1.5]" />
+              <p className="text-sm font-bold uppercase tracking-widest">No conversations</p>
             </div>
           )}
         </div>
@@ -225,52 +254,53 @@ const Chat = () => {
           />
 
           {/* Chat Header */}
-          <div className="p-3 bg-[#f0f2f5] border-b border-gray-200 flex items-center justify-between z-10 shadow-sm">
+          <div className="p-3 bg-[#f0f2f5] border-b border-[#e9edef] flex items-center justify-between z-10 shadow-sm">
             <div className="flex items-center">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 shadow-inner">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-100 to-indigo-50 border border-blue-100 flex items-center justify-center font-bold text-blue-600 shadow-inner overflow-hidden uppercase italic">
                 {activeChat.name[0]}
               </div>
               <div className="ml-3">
-                <p className="font-bold text-[#111b21] leading-tight">{activeChat.name}</p>
-                <p className="text-[11px] text-[#667781] font-medium tracking-wide">online</p>
+                <p className="font-bold text-[#111b21] leading-tight text-[16px]">{activeChat.name}</p>
+                <div className="flex items-center space-x-1.5 mt-0.5">
+                  <div className="w-1.5 h-1.5 bg-[#00a884] rounded-full"></div>
+                  <p className="text-[11px] text-[#00a884] font-bold uppercase tracking-widest">online</p>
+                </div>
               </div>
             </div>
             <div className="flex space-x-6 text-[#54656f]">
-              <Video className="w-5 h-5 cursor-pointer hover:text-blue-600 transition-colors" />
-              <Phone className="w-4 h-4 cursor-pointer hover:text-blue-600 transition-colors" />
-              <Search className="w-5 h-5 cursor-pointer hover:text-blue-600 transition-colors" />
-              <MoreVertical className="w-5 h-5 cursor-pointer hover:text-blue-600 transition-colors" />
+              <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors"><Search className="w-5 h-5" /></div>
+              <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors"><MoreVertical className="w-5 h-5" /></div>
             </div>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 md:px-8 space-y-1 relative z-10 scroll-smooth">
+          <div className="flex-1 overflow-y-auto p-4 md:px-12 space-y-1 relative z-10 scroll-smooth custom-scrollbar">
             {Object.entries(messageGroups).map(([date, groupMsgs]) => (
               <React.Fragment key={date}>
-                <div className="flex justify-center my-4 sticky top-2 z-20">
-                  <span className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-[11px] font-bold text-[#54656f] uppercase tracking-widest shadow-sm border border-gray-100">
+                <div className="flex justify-center my-6 sticky top-2 z-20">
+                  <span className="bg-white/80 backdrop-blur-md px-4 py-1.5 rounded-xl text-[11px] font-black text-[#54656f] uppercase tracking-[0.15em] shadow-lg shadow-gray-200/50 border border-white">
                     {date}
                   </span>
                 </div>
                 {groupMsgs.map((msg) => (
                   <div 
                     key={msg.id} 
-                    className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'} mb-1`}
+                    className={`flex ${msg.direction === 'outbound' ? 'justify-end' : 'justify-start'} mb-1 animate-in fade-in slide-in-from-bottom-1 duration-300`}
                   >
                     <div 
-                      className={`max-w-[85%] px-3 py-1.5 shadow-sm relative group
+                      className={`max-w-[80%] px-3.5 py-1.5 shadow-sm relative group
                         ${msg.direction === 'outbound' 
                           ? 'bg-[#dcf8c6] rounded-l-xl rounded-br-2xl text-[#111b21]' 
                           : 'bg-white rounded-r-xl rounded-bl-2xl text-[#111b21]'}
                       `}
                     >
                       {/* Message Tail */}
-                      <div className={`absolute top-0 w-2 h-2 ${msg.direction === 'outbound' ? '-right-1 bg-[#dcf8c6] rounded-tr-sm' : '-left-1 bg-white rounded-tl-sm'} rotate-45 z-0`} />
+                      <div className={`absolute top-0 w-2.5 h-2.5 ${msg.direction === 'outbound' ? '-right-1.5 bg-[#dcf8c6]' : '-left-1.5 bg-white'} rotate-45 z-0`} style={{ clipPath: msg.direction === 'outbound' ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }} />
 
-                      <div className="relative z-10">
-                        <p className="text-[14.5px] leading-relaxed break-words">{msg.body}</p>
-                        <div className="flex items-center justify-end space-x-1 -mt-0.5 ml-8 h-4">
-                          <span className="text-[10px] text-[#667781] font-medium font-sans">
+                      <div className="relative z-10 min-w-[60px]">
+                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.body}</p>
+                        <div className="flex items-center justify-end space-x-1.5 -mt-0.5 ml-10 h-4 opacity-70">
+                          <span className="text-[10px] text-[#667781] font-black uppercase tracking-widest font-sans">
                             {format(new Date(msg.created_at), 'HH:mm')}
                           </span>
                           {msg.direction === 'outbound' && (
@@ -295,51 +325,74 @@ const Chat = () => {
           </div>
 
           {/* Input Area */}
-          <div className="p-3 bg-[#f0f2f5] flex items-center space-x-3 z-10 shadow-[0_-1px_3px_rgba(0,0,0,0.05)]">
-            <Smile className="w-6 h-6 text-[#54656f] cursor-pointer hover:text-blue-600 transition-colors" />
-            <Paperclip className="w-5 h-5 text-[#54656f] cursor-pointer hover:text-blue-600 transition-colors rotate-45" />
+          <div className="p-3 bg-[#f0f2f5] flex items-center space-x-3 z-10 border-t border-[#e9edef]">
+            <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors"><Smile className="w-6 h-6 text-[#54656f]" /></div>
+            <div className="p-2 hover:bg-gray-200 rounded-full cursor-pointer transition-colors -rotate-45" title="Attach"><Paperclip className="w-5 h-5 text-[#54656f]" /></div>
             <form onSubmit={handleSend} className="flex-1">
               <input 
                 type="text" 
                 placeholder="Type a message" 
-                className="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none placeholder:text-[#8696a0] shadow-sm"
+                className="w-full px-5 py-3 bg-white border-none rounded-2xl text-[15px] font-medium focus:outline-none placeholder:text-[#8696a0] shadow-sm"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
               />
             </form>
             <button 
               onClick={handleSend}
-              className="bg-blue-600 p-2.5 rounded-xl text-white shadow-lg shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all"
+              className="bg-[#00a884] p-3 rounded-2xl text-white shadow-xl shadow-emerald-50 hover:bg-emerald-600 active:scale-95 transition-all flex items-center justify-center group"
             >
-              <Send className="w-5 h-5 font-bold" />
+              <Send className="w-5 h-5 font-bold group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </button>
           </div>
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center bg-[#f8f9fa] relative overflow-hidden">
+          {/* Background Decoration */}
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
                style={{ backgroundImage: `url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')`, backgroundSize: '400px' }} />
           
-          <div className="text-center relative z-10 scale-110">
-            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-100">
-              <MessageSquare className="w-12 h-12 text-blue-500 opacity-80" />
+          <div className="text-center relative z-10 scale-125">
+            <div className="w-24 h-24 bg-white rounded-[32px] flex items-center justify-center mx-auto mb-10 shadow-3xl shadow-blue-50/50 border border-gray-50 group">
+              <div className="relative">
+                <MessageSquare className="w-12 h-12 text-blue-500 opacity-80 group-hover:scale-110 transition-transform duration-500" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse"></div>
+              </div>
             </div>
-            <h2 className="text-3xl font-black text-gray-800 tracking-tighter mb-4 italic uppercase">BlastApp Chat</h2>
-            <p className="text-gray-500 max-w-xs mx-auto leading-relaxed font-medium">
-              Select a conversation to start messaging. Your chats are secured with end-to-end encryption.
+            <h2 className="text-4xl font-black text-gray-900 tracking-tight mb-4 italic uppercase">BlastApp Chat</h2>
+            <p className="text-gray-400 max-w-[280px] mx-auto leading-relaxed font-bold text-xs uppercase tracking-[0.2em] opacity-80">
+              Select a conversation to begin your outreach
             </p>
           </div>
-          <div className="absolute bottom-10 text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">
-            Enterprise Edition v2.0
+          <div className="absolute bottom-12 flex items-center space-x-2 text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] opacity-40">
+            <div className="w-8 h-[1px] bg-gray-300"></div>
+            <span>v2.4.0 High Reliability</span>
+            <div className="w-8 h-[1px] bg-gray-300"></div>
           </div>
         </div>
       )}
+      
+      {/* Global CSS Helpers */}
       <style dangerouslySetInnerHTML={{ __html: `
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f0f2f5; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        .animate-in { animation: fade-in 0.3s ease-out; }
       `}} />
     </div>
   );
 };
 
-export default Chat;
+const FilterButton = ({ active, label, onClick }) => (
+  <button 
+    onClick={onClick}
+    className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border
+      ${active 
+        ? 'bg-[#00a884] text-white border-[#00a884] shadow-sm' 
+        : 'bg-white text-[#54656f] border-gray-200 hover:bg-gray-100'}`}
+  >
+    {label}
+  </button>
+);
