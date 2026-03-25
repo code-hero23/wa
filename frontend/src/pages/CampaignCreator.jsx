@@ -75,15 +75,19 @@ const CampaignCreator = () => {
             const nameValue = row.name || row.customer || row.user || row.first_name || 'User';
             
             // Map params: 1. Try matching header name (param1, param2...) 2. Fallback to column index
-            const rowValues = Object.values(row);
             const params = requiredParams.map((p, index) => {
               const explicitValue = row[p.key.toLowerCase()];
               if (explicitValue !== undefined && explicitValue !== null && explicitValue !== '') {
                 return String(explicitValue);
               }
-              // Fallback to column index (skipping name/phone if they are likely at the start)
-              // But a better way: skip name/phone columns
-              return String(rowValues[index + 2] || ''); // Assuming name/phone are first two
+              
+              // Fallback: Use the first column that isn't mapped to phone/name
+              const reservedHeaders = ['phone', 'mobile', 'number', 'contact', 'whatsapp', 'name', 'customer', 'user', 'first_name'];
+              const remainingValues = Object.keys(row)
+                .filter(key => !reservedHeaders.includes(key.toLowerCase()))
+                .map(key => row[key]);
+                
+              return String(remainingValues[index] || '');
             });
 
             console.log('Parsed Row:', { name: nameValue, phone, params });

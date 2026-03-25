@@ -22,106 +22,105 @@ exports.verifyWebhook = (req, res) => {
 
 // Meta Webhook Events (Messages & Status Updates)
 exports.handleWebhook = async (req, res) => {
-  console.log('--- NEW WEBHOOK EVENT ---');
-  console.log('Method:', req.method);
-  console.log('URL:', req.url);
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  console.log('Body:', JSON.stringify(req.body, null, 2));
-  
   if (!req.body || Object.keys(req.body).length === 0) {
     console.log('[WEBHOOK] WARNING: Received empty body.');
     return res.sendStatus(200);
   }
 
   // Log raw body for extreme debugging on VPS
-  console.log('[WEBHOOK] RAW BODY:', JSON.stringify(req.body, null, 2));
+  console.log('[WEBHOOK] RAW BODY RECEIVED:', JSON.stringify(req.body, null, 2));
 
-  const value = req.body.entry?.[0]?.changes?.[0]?.value;
-
-  // 1. Handle Incoming Messages
-  const incomingMessages = value?.messages;
-  if (incomingMessages && Array.isArray(incomingMessages)) {
-    for (let msg of incomingMessages) {
-      const { from: phone, text, id: message_id, type } = msg;
-      let content = "";
-
-      if (type === "text") {
-        content = text?.body || "";
-      } else if (type === "button") {
-        content = msg.button?.text || "[Button Click]";
-      } else if (msg.interactive) {
-        content = msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "[Interactive Message]";
-      } else {
-        content = `[Received ${type} message]`;
-        console.log(`[WEBHOOK] Unsupported message type: ${type}`, JSON.stringify(msg, null, 2));
-      }
-
-      console.log(`[WEBHOOK] Final Content to store: "${content}" from ${phone}`);
-
-      try {
-        // 1.1 Find Contact (Handling country code mismatches)
-        // Meta sends 917418414780, but DB might have 7418414780.
-        let contactResult = await db.query(
-          "SELECT id FROM contacts WHERE phone = $1 OR $1 LIKE '%' || phone",
-          [phone]
-        );
-        
-        let contactId;
-        if (contactResult.rows.length > 0) {
-          contactId = contactResult.rows[0].id;
-        } else {
-          // Create new contact if not found
-          contactResult = await db.query(
-            "INSERT INTO contacts (name, phone) VALUES ($1, $2) RETURNING id",
-            [phone, phone]
-          );
-          contactId = contactResult.rows[0].id;
-        }
-
-        console.log(`Matching Contact ID: ${contactId} for phone: ${phone}`);
-
-        // 1.2 Store Inbound Message
-        if (contactId) {
-          await db.query(
-            "INSERT INTO chat_messages (contact_id, direction, content, message_id, status) VALUES ($1, $2, $3, $4, $5)",
-            [contactId, "inbound", content, message_id, "received"]
-          );
-
-          // 1.3 Update contact last message info
-          await db.query(
-            "UPDATE contacts SET last_message = $1, last_message_at = NOW() WHERE id = $2",
-            [content, contactId]
-          );
-        }
-      } catch (err) {
-        console.error("Error handling incoming message:", err);
-      }
-    }
+  const entries = req.body.entry;
+  if (!entries || !Array.isArray(entries)) {
+    return res.sendStatus(200);
   }
 
-  // 2. Handle Message Statuses (Campaign & Chat)
-  const statuses = value?.statuses;
-  if (statuses && Array.isArray(statuses)) {
-    for (let s of statuses) {
-      const { id: message_id, status } = s;
-      console.log(`Status notification: Message ${message_id} is now ${status}`);
-      
-      try {
-        // Update campaign messages table
-        await db.query(
-          "UPDATE messages SET status = $1, updated_at = NOW() WHERE message_id = $2",
-          [status, message_id]
-        );
+  try {
+    for (let entry of entries) {
+      const changes = entry.changes;
+      if (!changes || !Array.isArray(changes)) continue;
 
-        // Update chat_messages table
-        await db.query(
-          "UPDATE chat_messages SET status = $1 WHERE message_id = $2",
-          [status, message_id]
-        );
-      } catch (err) {
-        console.error("Webhook Status Update Error:", err);
+      for (let change of changes) {
+        const value = change.value;
+        if (!value) continue;
+
+        // 1. Handle Incoming Messages
+        const incomingMessages = value.messages;
+        if (incomingMessages && Array.isArray(incomingMessages)) {
+          for (let msg of incomingMessages) {
+            const { from: phone, text, id: message_id, type } = msg;
+            let content = "";
+
+            if (type === "text") {
+              content = text?.body || "";
+            } else if (type === "button") {
+              content = msg.button?.text || "[Button Click]";
+            } else if (msg.interactive) {
+              content = msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "[Interactive Message]";
+            } else {
+              content = `[Received ${type} message]`;
+              console.log(`[WEBHOOK] Unsupported message type: ${type}`, JSON.stringify(msg, null, 2));
+            }
+
+            console.log(`[WEBHOOK] Processing: "${content}" from ${phone}`);
+
+            // 1.1 Find/Upsert Contact
+            // We search for exact match first, then partial match, then insert.
+            let contactResult = await db.query(
+              "SELECT id FROM contacts WHERE phone = $1 OR $1 LIKE '%' || phone",
+              [phone]
+            );
+            
+            let contactId;
+            if (contactResult.rows.length > 0) {
+              contactId = contactResult.rows[0].id;
+              console.log(`[WEBHOOK] Matched existing contact ID: ${contactId}`);
+            } else {
+              // Create new contact if not found
+              contactResult = await db.query(
+                "INSERT INTO contacts (name, phone) VALUES ($1, $2) ON CONFLICT (phone) DO UPDATE SET last_message = EXCLUDED.last_message RETURNING id",
+                [phone, phone]
+              );
+              contactId = contactResult.rows[0].id;
+              console.log(`[WEBHOOK] Created new contact ID: ${contactId}`);
+            }
+
+            // 1.2 Store Inbound Message
+            await db.query(
+              "INSERT INTO chat_messages (contact_id, direction, content, message_id, status) VALUES ($1, $2, $3, $4, $5)",
+              [contactId, "inbound", content, message_id, "received"]
+            );
+
+            // 1.3 Update contact last message info
+            await db.query(
+              "UPDATE contacts SET last_message = $1, last_message_at = NOW() WHERE id = $2",
+              [content, contactId]
+            );
+          }
+        }
+
+        // 2. Handle Message Statuses
+        const statuses = value.statuses;
+        if (statuses && Array.isArray(statuses)) {
+          for (let s of statuses) {
+            const { id: message_id, status } = s;
+            console.log(`[WEBHOOK] Status update: ${message_id} -> ${status}`);
+            
+            await db.query(
+              "UPDATE messages SET status = $1, updated_at = NOW() WHERE message_id = $2",
+              [status, message_id]
+            );
+
+            await db.query(
+              "UPDATE chat_messages SET status = $1 WHERE message_id = $2",
+              [status, message_id]
+            );
+          }
+        }
       }
     }
+  } catch (err) {
+    console.error("[WEBHOOK] Critical Error:", err);
   }
 
   res.sendStatus(200);
