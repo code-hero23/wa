@@ -396,3 +396,5 @@ const FilterButton = ({ active, label, onClick }) => (
     {label}
   </button>
 );
+
+export default Chat;
