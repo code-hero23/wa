@@ -87,8 +87,8 @@ exports.handleWebhook = async (req, res) => {
 
             // 1.2 Store Inbound Message
             await db.query(
-              "INSERT INTO chat_messages (contact_id, direction, content, message_id, status) VALUES ($1, $2, $3, $4, $5)",
-              [contactId, "inbound", content, message_id, "received"]
+              "INSERT INTO chat_messages (contact_id, direction, content, message_id, status, is_read) VALUES ($1, $2, $3, $4, $5, $6)",
+              [contactId, "inbound", content, message_id, "received", false]
             );
 
             // 1.3 Update contact last message info

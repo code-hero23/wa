@@ -1,12 +1,17 @@
 const db = require("../config/db");
 const { sendMessage } = require("../services/whatsapp.service");
 
-// Get a list of all chat contacts
+// Get a list of all chat contacts with unread counts
 exports.getChats = async (req, res) => {
   try {
-    const result = await db.query(
-      "SELECT * FROM contacts ORDER BY last_message_at DESC NULLS LAST, id DESC"
-    );
+    const query = `
+      SELECT 
+        c.*,
+        (SELECT COUNT(*) FROM chat_messages cm WHERE cm.contact_id = c.id AND cm.direction = 'inbound' AND cm.is_read = false) as unread_count
+      FROM contacts c
+      ORDER BY last_message_at DESC NULLS LAST, id DESC
+    `;
+    const result = await db.query(query);
     res.json(result.rows);
   } catch (err) {
     console.error("Error fetching chats:", err);
@@ -65,5 +70,20 @@ exports.sendChatMessage = async (req, res) => {
   } catch (err) {
     console.error("Error sending chat message:", err);
     res.status(500).json({ error: "Failed to send message" });
+  }
+};
+
+// Mark all messages from a contact as read
+exports.markAsRead = async (req, res) => {
+  const { contactId } = req.params;
+  try {
+    await db.query(
+      "UPDATE chat_messages SET is_read = true WHERE contact_id = $1 AND direction = 'inbound' AND is_read = false",
+      [contactId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error marking as read:", err);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
