@@ -4,18 +4,30 @@ const { sendMessage } = require("../services/whatsapp.service");
 // Get a list of all chat contacts with unread counts
 exports.getChats = async (req, res) => {
   try {
+    const { unread, campaignId } = req.query;
+    let whereClause = '';
+    let params = [];
+
+    if (unread === 'true') {
+      whereClause = 'WHERE (SELECT COUNT(*) FROM chat_messages cm WHERE cm.contact_id = c.id AND cm.direction = \'inbound\' AND cm.is_read = false) > 0';
+    } else if (campaignId) {
+      whereClause = 'WHERE c.id IN (SELECT contact_id FROM messages WHERE campaign_id = $1)';
+      params.push(campaignId);
+    }
+
     const query = `
       SELECT 
         c.*,
         (SELECT COUNT(*) FROM chat_messages cm WHERE cm.contact_id = c.id AND cm.direction = 'inbound' AND cm.is_read = false) as unread_count
       FROM contacts c
+      ${whereClause}
       ORDER BY last_message_at DESC NULLS LAST, id DESC
     `;
-    const result = await db.query(query);
+    const result = await db.query(query, params);
     res.json(result.rows);
   } catch (err) {
-    console.error("Error fetching chats:", err);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.error('Error getting chats:', err);
+    res.status(500).json({ error: 'Failed to fetch chats' });
   }
 };
 

@@ -29,7 +29,7 @@ export const messageService = {
 };
 
 export const chatService = {
-  getChats: () => api.get('/chats'),
+  getChats: (params) => api.get('/chats', { params }),
   getMessages: (contactId) => api.get(`/chats/${contactId}/messages`),
   sendMessage: (contactId, body) => api.post('/chats/send', { contactId, body }),
   markAsRead: (contactId) => api.post(`/chats/${contactId}/read`),
