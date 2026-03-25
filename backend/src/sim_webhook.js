@@ -1,3 +1,4 @@
+require('dotenv').config();
 const axios = require('axios');
 
 async function test() {
@@ -60,12 +61,20 @@ async function test() {
   };
 
   try {
-    const res = await axios.post('http://localhost:5000/api/webhook', payload);
+    const port = process.env.PORT || 5150;
+    const url = `http://localhost:${port}/api/webhook`;
+    console.log(`Sending to: ${url}`);
+    
+    const res = await axios.post(url, payload);
     console.log('Response Status:', res.status);
     console.log('Success! The backend logic is working locally.');
   } catch (err) {
     console.error('FAILED! Local request could not reach backend:', err.message);
-    console.log('Ensure your backend is running on port 5000.');
+    if (err.response) {
+      console.error('Response Status:', err.response.status);
+      console.error('Response Data:', JSON.stringify(err.response.data, null, 2));
+    }
+    console.log('Ensure your backend is running and the port is correct.');
   }
 }
 
