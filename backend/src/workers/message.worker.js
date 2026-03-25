@@ -28,8 +28,10 @@ const messageWorker = new Worker(
         }
       ] : [];
 
+      console.log(`[WORKER] Sending template ${template} to ${phone} with components:`, JSON.stringify(components, null, 2));
+
       const result = await sendTemplate(phone, template, components);
-      console.log(`Successfully sent to ${phone}:`, result);
+      console.log(`[WORKER] Successfully sent to ${phone} (Meta ID: ${result.messages[0].id})`);
 
       // Update message status and store Meta's message ID
       await db.query(

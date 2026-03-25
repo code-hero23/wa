@@ -29,9 +29,12 @@ exports.handleWebhook = async (req, res) => {
   console.log('Body:', JSON.stringify(req.body, null, 2));
   
   if (!req.body || Object.keys(req.body).length === 0) {
-    console.log('WARNING: Received empty body at webhook endpoint.');
-    return res.sendStatus(200); // Meta expects 200 even if empty
+    console.log('[WEBHOOK] WARNING: Received empty body.');
+    return res.sendStatus(200);
   }
+
+  // Log raw body for extreme debugging on VPS
+  console.log('[WEBHOOK] RAW BODY:', JSON.stringify(req.body, null, 2));
 
   const value = req.body.entry?.[0]?.changes?.[0]?.value;
 
@@ -50,9 +53,10 @@ exports.handleWebhook = async (req, res) => {
         content = msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "[Interactive Message]";
       } else {
         content = `[Received ${type} message]`;
+        console.log(`[WEBHOOK] Unsupported message type: ${type}`, JSON.stringify(msg, null, 2));
       }
 
-      console.log(`[WEBHOOK] Incoming ${type} from ${phone}: ${content}`);
+      console.log(`[WEBHOOK] Final Content to store: "${content}" from ${phone}`);
 
       try {
         // 1.1 Find Contact (Handling country code mismatches)

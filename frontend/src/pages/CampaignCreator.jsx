@@ -72,11 +72,24 @@ const CampaignCreator = () => {
           const parsed = results.data.map(row => {
             // Find phone using common synonyms
             const phone = row.phone || row.mobile || row.number || row.contact || row.whatsapp || '';
-            const name = row.name || row.customer || row.user || row.first_name || 'User';
+            const nameValue = row.name || row.customer || row.user || row.first_name || 'User';
             
-            const params = requiredParams.map(p => row[p.key.toLowerCase()] || '');
+            // Map params: 1. Try matching header name (param1, param2...) 2. Fallback to column index
+            const rowValues = Object.values(row);
+            const params = requiredParams.map((p, index) => {
+              const explicitValue = row[p.key.toLowerCase()];
+              if (explicitValue !== undefined && explicitValue !== null && explicitValue !== '') {
+                return String(explicitValue);
+              }
+              // Fallback to column index (skipping name/phone if they are likely at the start)
+              // But a better way: skip name/phone columns
+              return String(rowValues[index + 2] || ''); // Assuming name/phone are first two
+            });
+
+            console.log('Parsed Row:', { name: nameValue, phone, params });
+            
             return {
-              name: String(name),
+              name: String(nameValue),
               phone: String(phone).replace(/\D/g, ''),
               params: params
             };
