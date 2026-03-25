@@ -1,13 +1,29 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
+const path = require("path");
 // Start workers
 require("./workers/message.worker");
 
 const app = express();
 
+// Detailed Request Logger for Webhook Debugging
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  const logEntry = `[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}\n`;
+  console.log(logEntry.trim());
+  
+  if (req.url.includes('webhook')) {
+    const detail = {
+      timestamp: new Date().toISOString(),
+      method: req.method,
+      url: req.url,
+      headers: req.headers,
+      ip: req.ip,
+      query: req.query
+    };
+    fs.appendFileSync(path.join(__dirname, '../webhook_traffic.log'), JSON.stringify(detail, null, 2) + '\n---\n');
+  }
   next();
 });
 
