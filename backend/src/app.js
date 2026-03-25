@@ -8,6 +8,12 @@ require("./workers/message.worker");
 
 const app = express();
 
+// Initialize the traffic log file so 'tail' doesn't fail
+const logPath = path.join(__dirname, '../webhook_traffic.log');
+if (!fs.existsSync(logPath)) {
+  fs.writeFileSync(logPath, `[${new Date().toISOString()}] Log initialized\n---\n`);
+}
+
 // Detailed Request Logger for Webhook Debugging
 app.use((req, res, next) => {
   const logEntry = `[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}\n`;
@@ -22,7 +28,7 @@ app.use((req, res, next) => {
       ip: req.ip,
       query: req.query
     };
-    fs.appendFileSync(path.join(__dirname, '../webhook_traffic.log'), JSON.stringify(detail, null, 2) + '\n---\n');
+    fs.appendFileSync(logPath, JSON.stringify(detail, null, 2) + '\n---\n');
   }
   next();
 });
