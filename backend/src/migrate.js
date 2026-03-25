@@ -1,19 +1,16 @@
-require('dotenv').config();
 const db = require('./config/db');
 
 async function migrate() {
+  console.log('--- RUNNING DATABASE MIGRATION ---');
   try {
-    console.log('Starting migration...');
     await db.query(`
-      ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS total_sent INTEGER DEFAULT 0;
-      ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS delivered_count INTEGER DEFAULT 0;
-      ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS read_count INTEGER DEFAULT 0;
-      ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS failed_count INTEGER DEFAULT 0;
+      ALTER TABLE chat_messages 
+      ADD COLUMN IF NOT EXISTS is_read BOOLEAN NOT NULL DEFAULT FALSE;
     `);
-    console.log('Migration completed successfully!');
+    console.log('SUCCESS: is_read column added to chat_messages table.');
     process.exit(0);
   } catch (err) {
-    console.error('Migration failed:', err.message);
+    console.error('MIGRATION FAILED:', err.message);
     process.exit(1);
   }
 }
