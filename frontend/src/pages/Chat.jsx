@@ -147,7 +147,7 @@ const Chat = () => {
         </div>
 
         {/* Filters Bar */}
-        <div className="px-4 py-2 flex items-center space-x-2 overflow-x-auto no-scrollbar border-b border-[#f2f2f2]">
+        <div className="px-4 py-2 flex items-center space-x-2 border-b border-[#f2f2f2] relative z-20 bg-white">
           <FilterButton 
             active={filter === 'all'} 
             onClick={() => { setFilter('all'); setSelectedCampaignId(''); }}
@@ -305,7 +305,7 @@ const Chat = () => {
                       <div className={`absolute top-0 w-2.5 h-2.5 ${msg.direction === 'outbound' ? '-right-1.5 bg-[#dcf8c6]' : '-left-1.5 bg-white'} rotate-45 z-0`} style={{ clipPath: msg.direction === 'outbound' ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }} />
 
                       <div className="relative z-10 min-w-[60px]">
-                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content}</p>
+                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content || '...'}</p>
                         <div className="flex items-center justify-end space-x-1.5 -mt-0.5 ml-10 h-4 opacity-70">
                           <span className="text-[10px] text-[#667781] font-black uppercase tracking-widest font-sans">
                             {format(new Date(msg.created_at), 'HH:mm')}
