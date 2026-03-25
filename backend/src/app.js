@@ -26,7 +26,8 @@ app.use((req, res, next) => {
       url: req.url,
       headers: req.headers,
       ip: req.ip,
-      query: req.query
+      query: req.query,
+      body: req.body // Add body to log
     };
     fs.appendFileSync(logPath, JSON.stringify(detail, null, 2) + '\n---\n');
   }
