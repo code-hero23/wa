@@ -8,6 +8,14 @@ require("./workers/message.worker");
 
 const app = express();
 
+app.use(cors());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = buf.toString();
+  }
+}));
+app.use(express.urlencoded({ extended: false }));
+
 // Initialize the traffic log file so 'tail' doesn't fail
 const logPath = path.join(__dirname, '../webhook_traffic.log');
 if (!fs.existsSync(logPath)) {
@@ -16,9 +24,6 @@ if (!fs.existsSync(logPath)) {
 
 // Detailed Request Logger for Webhook Debugging
 app.use((req, res, next) => {
-  const logEntry = `[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}\n`;
-  console.log(logEntry.trim());
-  
   if (req.url.includes('webhook')) {
     const detail = {
       timestamp: new Date().toISOString(),
@@ -26,16 +31,16 @@ app.use((req, res, next) => {
       url: req.url,
       headers: req.headers,
       ip: req.ip,
-      query: req.query,
-      body: req.body // Add body to log
+      rawBody: req.rawBody || "EMPTY_STREAM",
+      parsedBody: req.body
     };
     fs.appendFileSync(logPath, JSON.stringify(detail, null, 2) + '\n---\n');
+  } else {
+    const logEntry = `[${new Date().toISOString()}] ${req.method} ${req.url} - IP: ${req.ip}\n`;
+    console.log(logEntry.trim());
   }
   next();
 });
-
-app.use(cors());
-app.use(express.json());
 
 // Routes
 app.use("/api/campaigns", require("./routes/campaign.routes"));
