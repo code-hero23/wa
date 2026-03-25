@@ -12,6 +12,7 @@ const Chat = () => {
   const [filter, setFilter] = useState('all'); // all, unread, campaign
   const [selectedCampaignId, setSelectedCampaignId] = useState('');
   const [campaigns, setCampaigns] = useState([]);
+  const [isCampaignDropdownOpen, setIsCampaignDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
@@ -159,8 +160,9 @@ const Chat = () => {
           />
           
           {/* Custom Campaign Selector */}
-          <div className="relative group">
+          <div className="relative">
             <button 
+              onClick={() => setIsCampaignDropdownOpen(!isCampaignDropdownOpen)}
               className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-1 border
                 ${filter === 'campaign' 
                   ? 'bg-[#00a884] text-white border-[#00a884] shadow-sm' 
@@ -170,25 +172,30 @@ const Chat = () => {
               <span>{filter === 'campaign' ? (campaigns.find(c => c.id == selectedCampaignId)?.name || 'Campaign') : 'Campaigns'}</span>
               <ChevronDown className="w-3 h-3 ml-1 opacity-60" />
             </button>
-            <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-left transform scale-95 group-hover:scale-100">
-              <div className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Select Campaign</div>
-              <div className="max-h-60 overflow-y-auto custom-scrollbar">
-                {campaigns.map(c => (
-                  <div 
-                    key={c.id}
-                    onClick={() => {
-                      setSelectedCampaignId(c.id);
-                      setFilter('campaign');
-                    }}
-                    className={`px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm font-semibold transition-colors flex items-center justify-between
-                      ${selectedCampaignId == c.id ? 'text-[#00a884] bg-emerald-50/50' : 'text-gray-700'}`}
-                  >
-                    <span className="truncate pr-2">{c.name}</span>
-                    {selectedCampaignId == c.id && <div className="w-1.5 h-1.5 bg-[#00a884] rounded-full"></div>}
-                  </div>
-                ))}
+            {isCampaignDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-2xl py-2 z-50 transition-all duration-200 origin-top-left transform scale-100">
+                <div className="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50 mb-1">Select Campaign</div>
+                <div className="max-h-60 overflow-y-auto custom-scrollbar">
+                  {campaigns.map(c => (
+                    <div 
+                      key={c.id}
+                      onClick={() => {
+                        setSelectedCampaignId(c.id);
+                        setFilter('campaign');
+                        setIsCampaignDropdownOpen(false);
+                      }}
+                      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm font-semibold transition-colors flex items-center justify-between
+                        ${selectedCampaignId == c.id ? 'text-[#00a884] bg-emerald-50/50' : 'text-gray-700'}`}
+                    >
+                      <span className="truncate pr-2">{c.name}</span>
+                      {selectedCampaignId == c.id && <div className="w-1.5 h-1.5 bg-[#00a884] rounded-full"></div>}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+            {/* Click outside to close */}
+            {isCampaignDropdownOpen && <div className="fixed inset-0 z-40" onClick={() => setIsCampaignDropdownOpen(false)}></div>}
           </div>
         </div>
 
@@ -298,7 +305,7 @@ const Chat = () => {
                       <div className={`absolute top-0 w-2.5 h-2.5 ${msg.direction === 'outbound' ? '-right-1.5 bg-[#dcf8c6]' : '-left-1.5 bg-white'} rotate-45 z-0`} style={{ clipPath: msg.direction === 'outbound' ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }} />
 
                       <div className="relative z-10 min-w-[60px]">
-                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.body}</p>
+                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content}</p>
                         <div className="flex items-center justify-end space-x-1.5 -mt-0.5 ml-10 h-4 opacity-70">
                           <span className="text-[10px] text-[#667781] font-black uppercase tracking-widest font-sans">
                             {format(new Date(msg.created_at), 'HH:mm')}
