@@ -305,7 +305,18 @@ const Chat = () => {
                       <div className={`absolute top-0 w-2.5 h-2.5 ${msg.direction === 'outbound' ? '-right-1.5 bg-[#dcf8c6]' : '-left-1.5 bg-white'} rotate-45 z-0`} style={{ clipPath: msg.direction === 'outbound' ? 'polygon(0 0, 0% 100%, 100% 0)' : 'polygon(100% 0, 100% 100%, 0 0)' }} />
 
                       <div className="relative z-10 min-w-[60px]">
-                        <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content || '...'}</p>
+                        {msg.type === 'image' ? (
+                          <div className="mb-1 cursor-pointer hover:opacity-95 transition-opacity">
+                            <img 
+                              src={msg.content.startsWith('http') ? msg.content : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${msg.content}`}
+                              alt="Message" 
+                              className="rounded-lg max-w-full h-auto object-cover max-h-72 shadow-sm border border-black/5"
+                              onClick={() => window.open(msg.content.startsWith('http') ? msg.content : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${msg.content}`, '_blank')}
+                            />
+                          </div>
+                        ) : (
+                          <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content || '...'}</p>
+                        )}
                         <div className="flex items-center justify-end space-x-1.5 -mt-0.5 ml-10 h-4 opacity-70">
                           <span className="text-[10px] text-[#667781] font-black uppercase tracking-widest font-sans">
                             {format(new Date(msg.created_at), 'HH:mm')}

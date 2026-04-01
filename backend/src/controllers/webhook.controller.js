@@ -1,4 +1,7 @@
 const db = require("../config/db");
+const whatsapp = require("../services/whatsapp.service");
+const fs = require("fs");
+const path = require("path");
 
 // Meta Webhook Verification
 exports.verifyWebhook = (req, res) => {
@@ -50,12 +53,40 @@ exports.handleWebhook = async (req, res) => {
           for (let msg of incomingMessages) {
             const { from: phone, text, id: message_id, type } = msg;
             let content = "";
+            let msgType = type; // Keep track of the actual type for the DB
 
             if (type === "text") {
               content = text?.body || "";
+            } else if (type === "image") {
+              try {
+                const imageId = msg.image.id;
+                console.log(`[WEBHOOK] Downloading image from user: ${imageId}`);
+                const mediaData = await whatsapp.downloadMedia(imageId);
+                
+                // Determine file extension from mime type
+                const ext = mediaData.mimeType.split("/")[1] || "jpg";
+                const filename = `inbound_${imageId}.${ext}`;
+                const publicPath = path.join(__dirname, "../../public/media");
+                
+                // Ensure directory exists
+                if (!fs.existsSync(publicPath)) {
+                  fs.mkdirSync(publicPath, { recursive: true });
+                }
+                
+                const filePath = path.join(publicPath, filename);
+                fs.writeFileSync(filePath, mediaData.data);
+                
+                content = `/media/${filename}`;
+                console.log(`[WEBHOOK] Image saved to: ${content}`);
+              } catch (mediaErr) {
+                console.error(`[WEBHOOK] Error downloading media:`, mediaErr);
+                content = "[Image Download Failed]";
+              }
             } else if (type === "button") {
+              msgType = "text"; // Treat button clicks as text for UI
               content = msg.button?.text || "[Button Click]";
             } else if (msg.interactive) {
+              msgType = "text"; 
               content = msg.interactive.button_reply?.title || msg.interactive.list_reply?.title || "[Interactive Message]";
             } else {
               content = `[Received ${type} message]`;
@@ -87,8 +118,8 @@ exports.handleWebhook = async (req, res) => {
 
             // 1.2 Store Inbound Message
             await db.query(
-              "INSERT INTO chat_messages (contact_id, direction, content, message_id, status, is_read) VALUES ($1, $2, $3, $4, $5, $6)",
-              [contactId, "inbound", content, message_id, "received", false]
+              "INSERT INTO chat_messages (contact_id, direction, content, message_id, status, is_read, type) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+              [contactId, "inbound", content, message_id, "received", false, msgType]
             );
 
             // 1.3 Update contact last message info

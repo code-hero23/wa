@@ -86,3 +86,36 @@ exports.getTemplates = async () => {
     throw error;
   }
 };
+/**
+ * Downloads media from Meta's servers.
+ * @param {string} mediaId - The ID of the media.
+ * @returns {Promise} The media data and mime type.
+ */
+exports.downloadMedia = async (mediaId) => {
+  try {
+    // 1. Get the media URL
+    const urlResponse = await axios.get(`https://graph.facebook.com/v18.0/${mediaId}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      },
+    });
+
+    const mediaUrl = urlResponse.data.url;
+
+    // 2. Download the binary
+    const mediaResponse = await axios.get(mediaUrl, {
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+      },
+      responseType: "arraybuffer",
+    });
+
+    return {
+      data: Buffer.from(mediaResponse.data),
+      mimeType: mediaResponse.headers["content-type"],
+    };
+  } catch (error) {
+    console.error("WhatsApp Media Download Error:", error.response ? error.response.data : error.message);
+    throw error;
+  }
+};
