@@ -80,7 +80,7 @@ const MessageLogs = () => {
                     status={msg.status} 
                     campaign={msg.campaign_name} 
                     time={new Date(msg.updated_at).toLocaleString()}
-                    error={msg.error}
+                    error={msg.error_message}
                   />
                 ))
               ) : (

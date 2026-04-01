@@ -3,7 +3,7 @@ const messageQueue = require("../queues/message.queue");
 const whatsappService = require("../services/whatsapp.service");
 
 exports.createCampaign = async (req, res) => {
-  const { name, template, contacts } = req.body;
+  const { name, template, contacts, headerImageUrl } = req.body;
   
   if (!name || !template || !contacts || !Array.isArray(contacts)) {
     return res.status(400).json({ error: "Name, template, and contacts (array) are required" });
@@ -40,7 +40,8 @@ exports.createCampaign = async (req, res) => {
         contactId,
         phone: contact.phone,
         template: template,
-        params: contact.params || [] // Support multiple parameters
+        params: contact.params || [],
+        headerImageUrl: headerImageUrl || contact.headerImageUrl // Global or per-contact header image
       });
     }
 

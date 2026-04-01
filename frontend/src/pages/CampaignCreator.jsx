@@ -6,6 +6,7 @@ import { Upload, X, ChevronRight, Zap } from 'lucide-react';
 const CampaignCreator = () => {
   const [name, setName] = useState('');
   const [template, setTemplate] = useState('');
+  const [headerImageUrl, setHeaderImageUrl] = useState('');
   const [availableTemplates, setAvailableTemplates] = useState([]);
   const [isFetchingTemplates, setIsFetchingTemplates] = useState(false);
   const [contacts, setContacts] = useState([]);
@@ -36,6 +37,11 @@ const CampaignCreator = () => {
 
   const getSelectedTemplate = () => {
     return availableTemplates.find(t => t.name === template);
+  };
+
+  const hasImageHeader = () => {
+    const t = getSelectedTemplate();
+    return t?.components.some(c => c.type === 'HEADER' && c.format === 'IMAGE');
   };
 
   const getRequiredParams = () => {
@@ -125,7 +131,12 @@ const CampaignCreator = () => {
     setLoading(true);
     setMessage(null);
     try {
-      await campaignService.create({ name, template, contacts });
+      await campaignService.create({ 
+        name, 
+        template, 
+        contacts, 
+        headerImageUrl: hasImageHeader() ? headerImageUrl : null 
+      });
       setMessage({ type: 'success', text: 'Campaign blast started successfully!' });
       // Reset form
       setName('');
@@ -191,12 +202,42 @@ const CampaignCreator = () => {
           {template && getSelectedTemplate() && (
             <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
               <div className="text-[10px] uppercase tracking-widest font-black text-gray-400 mb-2">Template Preview</div>
-              <p className="text-sm text-gray-600 leading-relaxed italic">
-                {getSelectedTemplate().components.find(c => c.type === 'BODY')?.text.split(/(\{\{\d+\}\})/).map((part, i) => 
-                  part.match(/\{\{\d+\}\}/) 
-                  ? <span key={i} className="bg-blue-100 text-blue-700 px-1 rounded font-bold">{part}</span>
-                  : part
+              <div className="flex flex-col space-y-2">
+                {hasImageHeader() && (
+                  <div className="flex items-center space-x-2 bg-blue-50 p-2 rounded-lg border border-blue-100">
+                    <div className="w-10 h-10 bg-gray-200 rounded flex items-center justify-center text-gray-400">
+                      <Zap className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[8px] font-bold text-blue-600 uppercase">Image Header Detected</div>
+                      <div className="text-[10px] text-gray-500 italic">This template requires an image.</div>
+                    </div>
+                  </div>
                 )}
+                <p className="text-sm text-gray-600 leading-relaxed italic">
+                  {getSelectedTemplate().components.find(c => c.type === 'BODY')?.text.split(/(\{\{\d+\}\})/).map((part, i) => 
+                    part.match(/\{\{\d+\}\}/) 
+                    ? <span key={i} className="bg-blue-100 text-blue-700 px-1 rounded font-bold">{part}</span>
+                    : part
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {hasImageHeader() && (
+            <div className="mt-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Header Image URL</label>
+              <input 
+                type="text" 
+                placeholder="https://example.com/image.jpg"
+                className="w-full px-4 py-2 rounded-lg border border-blue-200 bg-blue-50/30 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                value={headerImageUrl}
+                onChange={(e) => setHeaderImageUrl(e.target.value)}
+              />
+              <p className="text-[10px] text-blue-500 mt-1.5 flex items-center">
+                <Zap className="w-3 h-3 mr-1 fill-current" />
+                Required for this media template. Paste a direct link to a JPG/PNG.
               </p>
             </div>
           )}

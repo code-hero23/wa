@@ -103,12 +103,17 @@ exports.handleWebhook = async (req, res) => {
         const statuses = value.statuses;
         if (statuses && Array.isArray(statuses)) {
           for (let s of statuses) {
-            const { id: message_id, status } = s;
+            const { id: message_id, status, errors } = s;
             console.log(`[WEBHOOK] Status update: ${message_id} -> ${status}`);
             
+            let errorMsg = null;
+            if (errors && Array.isArray(errors) && errors.length > 0) {
+              errorMsg = errors[0].message || JSON.stringify(errors[0]);
+            }
+
             await db.query(
-              "UPDATE messages SET status = $1, updated_at = NOW() WHERE message_id = $2",
-              [status, message_id]
+              "UPDATE messages SET status = $1, error_message = COALESCE($2, error_message), updated_at = NOW() WHERE message_id = $3",
+              [status, errorMsg, message_id]
             );
 
             await db.query(

@@ -12,21 +12,36 @@ const connection = new IORedis({
 const messageWorker = new Worker(
   "messages",
   async (job) => {
-    const { messageInternalId, campaignId, phone, template, name, params } = job.data;
+    const { messageInternalId, campaignId, phone, template, name, params, headerImageUrl } = job.data;
     console.log(`Processing message to ${phone} with template ${template}`);
     
     try {
-      // Create components for personalization (e.g., {{1}}, {{2}}... replaced by params)
+      const components = [];
+
+      // 1. Handle Header (for Media Templates)
+      if (headerImageUrl) {
+        components.push({
+          type: "header",
+          parameters: [
+            {
+              type: "image",
+              image: { link: headerImageUrl }
+            }
+          ]
+        });
+      }
+
+      // 2. Handle Body Parameters
       const parameters = (params && Array.isArray(params) && params.length > 0)
         ? params.map(p => ({ type: "text", text: String(p) }))
         : (name ? [{ type: "text", text: name }] : []);
 
-      const components = parameters.length > 0 ? [
-        {
+      if (parameters.length > 0) {
+        components.push({
           type: "body",
           parameters: parameters
-        }
-      ] : [];
+        });
+      }
 
       console.log(`[WORKER] Sending template ${template} to ${phone} with components:`, JSON.stringify(components, null, 2));
 
