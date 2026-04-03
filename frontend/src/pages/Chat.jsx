@@ -317,8 +317,10 @@ const Chat = () => {
                         ) : msg.type === 'document' ? (
                           <div className="bg-black/5 rounded-lg p-3 flex items-center space-x-3 mb-1 group/doc hover:bg-black/10 transition-colors cursor-pointer min-w-[200px]"
                                onClick={() => {
-                                 const [url] = msg.content.split('|');
-                                 window.open(url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${url}`, '_blank');
+                                 const content = msg.content || '';
+                                 if (content.startsWith('[')) return; // Ignore placeholders
+                                 const [url] = content.split('|');
+                                 window.open(url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${url.startsWith('/') ? '' : '/'}${url}`, '_blank');
                                }}>
                             <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm flex-shrink-0">
                               {msg.content.toLowerCase().includes('.pdf') ? <FileText className="w-6 h-6 text-red-500" /> : <File className="w-6 h-6 text-blue-500" />}
