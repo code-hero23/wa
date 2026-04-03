@@ -340,8 +340,12 @@ const Chat = () => {
                                <span>Contact Shared</span>
                              </div>
                              {(() => {
+                               const content = msg.content || '';
+                               if (!content.startsWith('[')) {
+                                 return <span className="text-sm font-medium text-[#111b21]">{content}</span>;
+                               }
                                try {
-                                 const contacts = JSON.parse(msg.content);
+                                 const contacts = JSON.parse(content);
                                  return contacts.map((c, i) => (
                                    <div key={i} className="flex flex-col group/contact cursor-pointer" onClick={() => window.open(`tel:${c.phone}`, '_self')}>
                                      <span className="font-bold text-[#111b21] text-sm group-hover:text-blue-600 transition-colors">{c.name}</span>
@@ -349,7 +353,7 @@ const Chat = () => {
                                    </div>
                                  ));
                                } catch (e) {
-                                 return <span className="text-xs text-red-500 italic">Invalid contact data</span>;
+                                 return <span className="text-sm font-medium text-[#111b21]">{content}</span>;
                                }
                              })()}
                           </div>
