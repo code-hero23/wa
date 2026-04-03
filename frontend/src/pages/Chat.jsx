@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Send, Check, CheckCheck, MoreVertical, Paperclip, Smile, Phone, Video, Filter, ChevronLeft, ChevronDown, ListFilter, Inbox, Tag, MessageSquare } from 'lucide-react';
+import { Search, Send, Check, CheckCheck, MoreVertical, Paperclip, Smile, Phone, Video, Filter, ChevronLeft, ChevronDown, ListFilter, Inbox, Tag, MessageSquare, File, FileText, Download, User, ExternalLink } from 'lucide-react';
 import { chatService, campaignService } from '../services/api';
 import { format, isToday, isYesterday } from 'date-fns';
 
@@ -313,6 +313,43 @@ const Chat = () => {
                               className="rounded-lg max-w-full h-auto object-cover max-h-72 shadow-sm border border-black/5"
                               onClick={() => window.open(msg.content.startsWith('http') ? msg.content : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${msg.content}`, '_blank')}
                             />
+                          </div>
+                        ) : msg.type === 'document' ? (
+                          <div className="bg-black/5 rounded-lg p-3 flex items-center space-x-3 mb-1 group/doc hover:bg-black/10 transition-colors cursor-pointer min-w-[200px]"
+                               onClick={() => {
+                                 const [url] = msg.content.split('|');
+                                 window.open(url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${url}`, '_blank');
+                               }}>
+                            <div className="w-10 h-10 rounded-lg bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                              {msg.content.toLowerCase().includes('.pdf') ? <FileText className="w-6 h-6 text-red-500" /> : <File className="w-6 h-6 text-blue-500" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold truncate text-[#111b21]">{msg.content.split('|')[1] || 'Document'}</p>
+                              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                                {msg.content.split('|')[0].split('.').pop()?.toUpperCase() || 'FILE'}
+                              </p>
+                            </div>
+                            <Download className="w-4 h-4 text-gray-400 opacity-40 group-hover/doc:opacity-100 transition-opacity" />
+                          </div>
+                        ) : msg.type === 'contacts' ? (
+                          <div className="bg-white/50 rounded-xl p-3 border border-black/5 mb-1 space-y-2 min-w-[180px]">
+                             <div className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-gray-400 border-b border-black/5 pb-1 select-none">
+                               <User className="w-3 h-3" />
+                               <span>Contact Shared</span>
+                             </div>
+                             {(() => {
+                               try {
+                                 const contacts = JSON.parse(msg.content);
+                                 return contacts.map((c, i) => (
+                                   <div key={i} className="flex flex-col group/contact cursor-pointer" onClick={() => window.open(`tel:${c.phone}`, '_self')}>
+                                     <span className="font-bold text-[#111b21] text-sm group-hover:text-blue-600 transition-colors">{c.name}</span>
+                                     <span className="text-[11px] text-[#00a884] font-bold tracking-tight">{c.phone}</span>
+                                   </div>
+                                 ));
+                               } catch (e) {
+                                 return <span className="text-xs text-red-500 italic">Invalid contact data</span>;
+                               }
+                             })()}
                           </div>
                         ) : (
                           <p className="text-[15px] leading-relaxed break-words font-medium">{msg.content || '...'}</p>

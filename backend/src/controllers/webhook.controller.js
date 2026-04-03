@@ -82,6 +82,44 @@ exports.handleWebhook = async (req, res) => {
                 console.error(`[WEBHOOK] Error downloading media:`, mediaErr);
                 content = "[Image Download Failed]";
               }
+            } else if (type === "document") {
+              try {
+                const doc = msg.document;
+                const mediaId = doc.id;
+                const originalFilename = doc.filename || `document_${mediaId}.pdf`;
+                console.log(`[WEBHOOK] Downloading document: ${originalFilename}`);
+                const mediaData = await whatsapp.downloadMedia(mediaId);
+                
+                const ext = path.extname(originalFilename) || `.${mediaData.mimeType.split("/")[1] || "pdf"}`;
+                const filename = `inbound_${mediaId}${ext}`;
+                const publicPath = path.join(__dirname, "../../public/media");
+                
+                if (!fs.existsSync(publicPath)) {
+                  fs.mkdirSync(publicPath, { recursive: true });
+                }
+                
+                const filePath = path.join(publicPath, filename);
+                fs.writeFileSync(filePath, mediaData.data);
+                
+                // Store format: file_url|original_name
+                content = `/media/${filename}|${originalFilename}`; 
+                console.log(`[WEBHOOK] Document saved: ${content}`);
+              } catch (mediaErr) {
+                console.error(`[WEBHOOK] Error downloading document:`, mediaErr);
+                content = "[Document Download Failed]";
+              }
+            } else if (type === "contacts") {
+              try {
+                const contactsArray = msg.contacts || [];
+                const parsedContacts = contactsArray.map(c => ({
+                  name: c.name?.formatted_name || `${c.name?.first_name || ""} ${c.name?.last_name || ""}`.trim() || "Contact",
+                  phone: c.phones?.[0]?.phone || "No number"
+                }));
+                content = JSON.stringify(parsedContacts);
+              } catch (err) {
+                console.error(`[WEBHOOK] Error processing contacts:`, err);
+                content = "[Contact Card]";
+              }
             } else if (type === "button") {
               msgType = "text"; // Treat button clicks as text for UI
               content = msg.button?.text || "[Button Click]";

@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 // Start workers
 require("./workers/message.worker");
 
@@ -9,6 +10,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Serve static media files
+app.use("/media", express.static(path.join(__dirname, "../public/media")));
+
 
 const authMiddleware = require("./middlewares/auth.middleware");
 
