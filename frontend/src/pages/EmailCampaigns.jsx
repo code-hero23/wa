@@ -363,8 +363,10 @@ const EmailCampaigns = () => {
                               onChange={(e) => {
                                 const t = templates.find(temp => temp.id === parseInt(e.target.value));
                                 if (t) {
+                                  // Switch mode FIRST to avoid ReactQuill escaping tags
+                                  const containsHtml = t.body.toLowerCase().includes('<html');
+                                  setIsSourceMode(containsHtml);
                                   setFormData({ ...formData, body: t.body, subject: t.subject || formData.subject });
-                                  if (t.body.includes('<html')) setIsSourceMode(true);
                                 }
                               }}
                               value=""

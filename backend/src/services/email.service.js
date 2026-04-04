@@ -55,7 +55,12 @@ const sendEmail = async ({ to, subject, body, trackingId, campaignId, contactId 
   let finalBody = body;
   if (trackingId) {
     const trackingPixel = `<img src="${process.env.BACKEND_URL || 'http://localhost:5150'}/api/email/track/${trackingId}.png" width="1" height="1" style="display:none;" />`;
-    finalBody += trackingPixel;
+    
+    if (finalBody.toLowerCase().includes('</body>')) {
+      finalBody = finalBody.replace(/<\/body>/i, `${trackingPixel}</body>`);
+    } else {
+      finalBody += trackingPixel;
+    }
   }
 
   const info = await transporter.sendMail({

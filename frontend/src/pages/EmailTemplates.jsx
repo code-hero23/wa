@@ -46,8 +46,8 @@ const EmailTemplates = () => {
   };
 
   const handleEdit = (template) => {
+    setIsSourceMode(template.body.toLowerCase().includes('<html'));
     setCurrentTemplate(template);
-    setIsSourceMode(template.body.includes('<html'));
     setShowEditor(true);
   };
 
