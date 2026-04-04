@@ -24,12 +24,24 @@ const Settings = () => {
 
   const fetchData = async () => {
     try {
-      const [sRes, eRes] = await Promise.all([
-        emailService.getSmtp(),
-        authService.getEmployees()
-      ]);
-      if (sRes.data.settings?.length > 0) setSmtp(sRes.data.settings[0]);
-      setEmployees(eRes.data.employees || []);
+      // 1. Fetch SMTP Settings
+      try {
+        const sRes = await emailService.getSmtp();
+        if (sRes.data.settings?.length > 0) setSmtp(sRes.data.settings[0]);
+      } catch (err) {
+        console.warn('Could not fetch SMTP settings', err);
+      }
+
+      // 2. Fetch Employees (Only if Admin)
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.role === 'admin') {
+        try {
+          const eRes = await authService.getEmployees();
+          setEmployees(eRes.data.employees || []);
+        } catch (err) {
+          console.warn('Could not fetch employees', err);
+        }
+      }
     } catch (err) {
       console.error('Failed to fetch settings', err);
     } finally {
@@ -106,12 +118,14 @@ const Settings = () => {
           icon={<Server className="w-4 h-4" />} 
           label="SMTP Configuration" 
         />
-        <TabButton 
-          active={activeTab === 'employees'} 
-          onClick={() => setActiveTab('employees')} 
-          icon={<Users className="w-4 h-4" />} 
-          label="Employee Management" 
-        />
+        {JSON.parse(localStorage.getItem('user') || '{}').role === 'admin' && (
+          <TabButton 
+            active={activeTab === 'employees'} 
+            onClick={() => setActiveTab('employees')} 
+            icon={<Users className="w-4 h-4" />} 
+            label="Employee Management" 
+          />
+        )}
       </div>
 
       <AnimatePresence mode="wait">

@@ -30,7 +30,7 @@ const replaceVariables = (content, contact) => {
 const getActiveSmtp = async () => {
   const result = await db.query('SELECT * FROM smtp_settings WHERE is_active = true LIMIT 1');
   if (result.rows.length === 0) {
-    throw new Error('No active SMTP configuration found');
+    throw new Error('No active SMTP configuration found. Please save your SMTP settings in the Settings page first.');
   }
   return result.rows[0];
 };
