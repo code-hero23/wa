@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Rocket, ClipboardList, Settings, Menu, MessageSquare, LogOut, Loader2 } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, NavLink, Navigate, useLocation } from 'react-router-dom';
+import { 
+  LayoutDashboard, Rocket, ClipboardList, Settings as SettingsIcon, Menu, 
+  MessageSquare, LogOut, Loader2, Mail, Users, FileText, Layout, Shield 
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// WhatsApp Pages
 import Dashboard from './pages/Dashboard';
 import CampaignCreator from './pages/CampaignCreator';
 import MessageLogs from './pages/MessageLogs';
 import Chat from './pages/Chat';
+
+// Email Pages
+import EmailDashboard from './pages/EmailDashboard';
+import EmailCampaigns from './pages/EmailCampaigns';
+import EmailTemplates from './pages/EmailTemplates';
+import Contacts from './pages/Contacts';
+import Settings from './pages/Settings';
+
 import Login from './pages/Login';
 import { authService } from './services/api';
 
@@ -20,6 +34,7 @@ const ProtectedRoute = ({ children, isAuthenticated, isLoading }) => {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -35,8 +50,9 @@ function App() {
     }
 
     try {
-      await authService.verify();
+      const response = await authService.verify();
       setIsAuthenticated(true);
+      setUser(response.data.user);
     } catch (err) {
       localStorage.removeItem('token');
       setIsAuthenticated(false);
@@ -48,6 +64,7 @@ function App() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     setIsAuthenticated(false);
+    setUser(null);
     window.location.href = '/login';
   };
 
@@ -59,37 +76,73 @@ function App() {
           <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
             <div className="min-h-screen bg-gray-50 flex">
               {/* Sidebar */}
-              <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col shadow-sm">
-                <div className="p-6">
-                  <div className="flex items-center space-x-2 text-blue-600">
-                    <Rocket className="w-8 h-8 font-bold" />
-                    <span className="text-xl font-black tracking-tight text-gray-900 uppercase italic">BlastApp</span>
+              <aside className="w-72 bg-white border-r border-gray-100 hidden md:flex flex-col shadow-sm">
+                <div className="p-8">
+                  <div className="flex items-center space-x-3 text-blue-600 mb-2">
+                    <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-100">
+                      <Rocket className="w-6 h-6" />
+                    </div>
+                    <span className="text-2xl font-black tracking-tighter text-gray-900 italic">BlastApp</span>
                   </div>
                 </div>
                 
-                <nav className="flex-1 px-4 space-y-2">
-                  <NavItem to="/" icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" />
-                  <NavItem to="/chat" icon={<MessageSquare className="w-5 h-5" />} label="Live Chat" />
-                  <NavItem to="/create" icon={<Rocket className="w-5 h-5" />} label="New Campaign" />
-                  <NavItem to="/logs" icon={<ClipboardList className="w-5 h-5" />} label="Message Logs" />
+                <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-4">
+                  {/* WhatsApp Section */}
+                  <div>
+                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">WhatsApp System</h3>
+                    <div className="space-y-1">
+                      <NavItem to="/" icon={<LayoutDashboard className="w-5 h-5" />} label="WA Dashboard" />
+                      <NavItem to="/chat" icon={<MessageSquare className="w-5 h-5" />} label="Live Chat" />
+                      <NavItem to="/wa-campaign" icon={<Rocket className="w-5 h-5" />} label="WA Campaign" />
+                    </div>
+                  </div>
+
+                  {/* Email Section */}
+                  <div>
+                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Email Marketing</h3>
+                    <div className="space-y-1">
+                      <NavItem to="/email-dashboard" icon={<BarChart3Icon className="w-5 h-5" />} label="Email Stats" />
+                      <NavItem to="/email-campaigns" icon={<Mail className="w-5 h-5" />} label="Mail Blasts" />
+                      <NavItem to="/email-templates" icon={<Layout className="w-5 h-5" />} label="Templates" />
+                    </div>
+                  </div>
+
+                  {/* CRM Section */}
+                  <div>
+                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Contacts & Data</h3>
+                    <div className="space-y-1">
+                      <NavItem to="/contacts" icon={<Users className="w-5 h-5" />} label="Contact List" />
+                      <NavItem to="/wa-logs" icon={<ClipboardList className="w-5 h-5" />} label="WA History" />
+                    </div>
+                  </div>
+
+                  {/* System Section */}
+                  <div>
+                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Administration</h3>
+                    <div className="space-y-1">
+                      <NavItem to="/settings" icon={<SettingsIcon className="w-5 h-5" />} label="Configuration" />
+                    </div>
+                  </div>
                 </nav>
 
-                <div className="p-4 border-t border-gray-100">
-                  <div className="flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 transition-all">
+                {/* Footer User Profile */}
+                <div className="p-6 border-t border-gray-100">
+                  <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-3xl border border-gray-100/50">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 font-bold shadow-inner">A</div>
+                      <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md">
+                        {user?.name?.charAt(0).toUpperCase() || 'A'}
+                      </div>
                       <div>
-                        <p className="text-sm font-bold text-gray-900">Admin</p>
+                        <p className="text-sm font-black text-gray-900 leading-none mb-1">{user?.name || 'Admin'}</p>
                         <div className="flex items-center space-x-1">
                           <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                          <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold font-sans">Online</p>
+                          <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">{user?.role || 'Admin'}</p>
                         </div>
                       </div>
                     </div>
                     <button 
                       onClick={handleLogout}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                      title="Logout"
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                     >
                       <LogOut className="w-5 h-5" />
                     </button>
@@ -108,14 +161,8 @@ function App() {
                   <Menu className="w-6 h-6 text-gray-600" />
                 </header>
 
-                <div className="p-0 md:p-6 lg:p-8 max-w-[1600px] mx-auto min-h-full">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/chat" element={<Chat />} />
-                    <Route path="/create" element={<CampaignCreator />} />
-                    <Route path="/logs" element={<MessageLogs />} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
+                <div className="p-0 md:p-10 lg:p-12 max-w-[1600px] mx-auto min-h-screen">
+                   <AnimatedRoutes />
                 </div>
               </main>
             </div>
@@ -126,19 +173,58 @@ function App() {
   );
 }
 
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+        className="h-full"
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/wa-campaign" element={<CampaignCreator />} />
+          <Route path="/wa-logs" element={<MessageLogs />} />
+          
+          <Route path="/email-dashboard" element={<EmailDashboard />} />
+          <Route path="/email-campaigns" element={<EmailCampaigns />} />
+          <Route path="/email-templates" element={<EmailTemplates />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/settings" element={<Settings />} />
+          
+          <Route path="*" element={<Navigate to="/email-dashboard" replace />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const NavItem = ({ to, icon, label }) => (
   <NavLink 
     to={to} 
     className={({ isActive }) => `
-      flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium
+      flex items-center space-x-4 px-6 py-4 rounded-2xl transition-all duration-300 font-bold group
       ${isActive 
-        ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' 
-        : 'text-gray-500 hover:bg-blue-50 hover:text-blue-600'}
+        ? 'bg-blue-600 text-white shadow-xl shadow-blue-100 scale-[1.02] -translate-y-0.5' 
+        : 'text-gray-500 hover:bg-gray-50 hover:text-blue-600'}
     `}
   >
-    {icon}
-    <span>{label}</span>
+    <div className={`transition-transform duration-300 group-hover:scale-110`}>
+      {icon}
+    </div>
+    <span className="text-[13px] tracking-tight">{label}</span>
   </NavLink>
+);
+
+const BarChart3Icon = ({ className }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+  </svg>
 );
 
 export default App;

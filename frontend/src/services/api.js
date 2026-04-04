@@ -16,12 +16,37 @@ api.interceptors.request.use((config) => {
 export const authService = {
   login: (email, password) => api.post('/auth/login', { email, password }),
   verify: () => api.get('/auth/verify'),
+  getEmployees: () => api.get('/auth/employees'),
+  registerEmployee: (data) => api.post('/auth/employees', data),
+  deleteEmployee: (id) => api.delete(`/auth/employees/${id}`),
 };
 
 export const campaignService = {
   create: (data) => api.post('/campaigns/send', data),
   getAll: () => api.get('/campaigns'),
   getTemplates: () => api.get('/campaigns/templates'),
+};
+
+export const emailService = {
+  createCampaign: (data) => api.post('/email/campaigns', data),
+  getCampaigns: () => api.get('/email/campaigns'),
+  getCampaignStats: (id) => api.get(`/email/campaigns/${id}`),
+  getTemplates: () => api.get('/email/templates'),
+  createTemplate: (data) => api.post('/email/templates', data),
+  updateTemplate: (id, data) => api.put(`/email/templates/${id}`, data),
+  deleteTemplate: (id) => api.delete(`/email/templates/${id}`),
+  getSmtp: () => api.get('/email/smtp'),
+  updateSmtp: (data) => api.post('/email/smtp', data),
+};
+
+export const contactService = {
+  getAll: (params) => api.get('/contacts', { params }),
+  create: (data) => api.post('/contacts', data),
+  update: (id, data) => api.put(`/contacts/${id}`, data),
+  delete: (id) => api.delete(`/contacts/${id}`),
+  import: (formData) => api.post('/contacts/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 export const messageService = {
