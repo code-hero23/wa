@@ -104,6 +104,13 @@ const EmailCampaigns = () => {
     }
   };
 
+  const handleInsertVariable = (value) => {
+    setFormData(prev => ({
+      ...prev,
+      body: prev.body + ` ${value} `
+    }));
+  };
+
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
@@ -342,9 +349,9 @@ const EmailCampaigns = () => {
                     >
                       <div className="flex justify-between items-center mb-4 gap-4">
                         <div className="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
-                          <VariableChip label="Name" value="{{name}}" />
-                          <VariableChip label="Project" value="{{project}}" />
-                          <VariableChip label="Location" value="{{location}}" />
+                          <VariableChip label="Name" value="{{name}}" onInsert={handleInsertVariable} />
+                          <VariableChip label="Project" value="{{project}}" onInsert={handleInsertVariable} />
+                          <VariableChip label="Location" value="{{location}}" onInsert={handleInsertVariable} />
                         </div>
                         <div className="flex items-center space-x-4">
                           <button 
@@ -490,12 +497,9 @@ const EmailCampaigns = () => {
   );
 };
 
-const VariableChip = ({ label, value }) => (
+const VariableChip = ({ label, value, onInsert }) => (
   <button 
-    onClick={() => {
-      const editor = document.querySelector('.ql-editor');
-      if (editor) editor.innerHTML += ` <span style="color: #3b82f6; font-weight: bold;">${value}</span> `;
-    }}
+    onClick={() => onInsert(value)}
     className="px-4 py-2 bg-blue-50 text-blue-600 text-xs font-black rounded-xl border border-blue-100 hover:bg-blue-100 transition-all flex items-center space-x-2"
   >
     <Plus className="w-3 h-3" />
