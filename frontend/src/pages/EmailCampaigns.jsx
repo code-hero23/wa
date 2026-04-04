@@ -338,13 +338,31 @@ const EmailCampaigns = () => {
                       exit={{ opacity: 0, x: -20 }}
                       className="h-full flex flex-col space-y-6"
                     >
-                      <div className="flex justify-between items-center mb-4">
-                        <div className="flex space-x-2">
+                      <div className="flex justify-between items-center mb-4 gap-4">
+                        <div className="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
                           <VariableChip label="Name" value="{{name}}" />
                           <VariableChip label="Project" value="{{project}}" />
                           <VariableChip label="Location" value="{{location}}" />
                         </div>
-                        <p className="text-xs font-bold text-blue-500 uppercase tracking-widest">Tip: Click to insert variable</p>
+                        <div className="flex items-center space-x-4">
+                          <div className="relative">
+                            <select 
+                              className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-gray-500 shadow-sm focus:border-blue-500 outline-none transition-all cursor-pointer"
+                              onChange={(e) => {
+                                const t = templates.find(temp => temp.id === parseInt(e.target.value));
+                                if (t) setFormData({ ...formData, body: t.body, subject: t.subject || formData.subject });
+                              }}
+                              value=""
+                            >
+                              <option value="" disabled>Load Template...</option>
+                              {templates.map(t => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                              ))}
+                            </select>
+                            <Layout className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                          </div>
+                          <p className="hidden md:block text-[10px] font-bold text-blue-500 uppercase tracking-widest whitespace-nowrap">Tip: Click to insert variable</p>
+                        </div>
                       </div>
                       <div className="flex-1 bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-inner min-h-[400px]">
                         <ReactQuill 
