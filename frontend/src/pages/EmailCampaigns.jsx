@@ -4,7 +4,7 @@ import 'react-quill-new/dist/quill.snow.css';
 import { 
   Plus, Send, Eye, Clock, CheckCircle, AlertCircle, 
   Users, Layout, Type, ArrowRight, ArrowLeft, X, 
-  Search, Mail, Target, BarChart2
+  Search, Mail, Target, BarChart2, Code2
 } from 'lucide-react';
 import { emailService, contactService } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +25,8 @@ const EmailCampaigns = () => {
     grouping: '',
     scheduledAt: null
   });
+
+  const [isSourceMode, setIsSourceMode] = useState(false);
 
   const [availableContacts, setAvailableContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
@@ -345,12 +347,25 @@ const EmailCampaigns = () => {
                           <VariableChip label="Location" value="{{location}}" />
                         </div>
                         <div className="flex items-center space-x-4">
+                          <button 
+                            onClick={() => setIsSourceMode(!isSourceMode)}
+                            className={`p-2.5 rounded-xl border transition-all flex items-center space-x-2 ${
+                              isSourceMode ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                            }`}
+                            title="Toggle Source Code"
+                          >
+                            <Code2 className="w-5 h-5" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{isSourceMode ? 'Visual' : 'Code'}</span>
+                          </button>
                           <div className="relative">
                             <select 
-                              className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-xl text-xs font-black uppercase tracking-widest text-gray-500 shadow-sm focus:border-blue-500 outline-none transition-all cursor-pointer"
+                              className="appearance-none pl-10 pr-10 py-2.5 bg-white border border-gray-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-500 shadow-sm focus:border-blue-500 outline-none transition-all cursor-pointer"
                               onChange={(e) => {
                                 const t = templates.find(temp => temp.id === parseInt(e.target.value));
-                                if (t) setFormData({ ...formData, body: t.body, subject: t.subject || formData.subject });
+                                if (t) {
+                                  setFormData({ ...formData, body: t.body, subject: t.subject || formData.subject });
+                                  if (t.body.includes('<html')) setIsSourceMode(true);
+                                }
                               }}
                               value=""
                             >
@@ -364,14 +379,23 @@ const EmailCampaigns = () => {
                           <p className="hidden md:block text-[10px] font-bold text-blue-500 uppercase tracking-widest whitespace-nowrap">Tip: Click to insert variable</p>
                         </div>
                       </div>
-                      <div className="flex-1 bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-inner min-h-[400px]">
-                        <ReactQuill 
-                          theme="snow" 
-                          value={formData.body}
-                          onChange={(content) => setFormData({...formData, body: content})}
-                          modules={modules}
-                          className="h-full quill-editor"
-                        />
+                      <div className="flex-1 bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-inner min-h-[400px] flex flex-col">
+                        {isSourceMode ? (
+                          <textarea
+                            className="flex-1 w-full p-8 font-mono text-sm bg-gray-900 text-blue-400 border-none outline-none resize-none custom-scrollbar"
+                            value={formData.body}
+                            onChange={(e) => setFormData({...formData, body: e.target.value})}
+                            placeholder="Paste your professional HTML code here..."
+                          />
+                        ) : (
+                          <ReactQuill 
+                            theme="snow" 
+                            value={formData.body}
+                            onChange={(content) => setFormData({...formData, body: content})}
+                            modules={modules}
+                            className="h-full quill-editor"
+                          />
+                        )}
                       </div>
                     </motion.div>
                   )}

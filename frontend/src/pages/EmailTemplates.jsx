@@ -3,7 +3,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 import { 
   Plus, Edit2, Trash2, Layout, Copy, Save, X, Search,
-  CheckCircle, FileText, Mail, Info, ArrowLeft
+  CheckCircle, FileText, Mail, Info, ArrowLeft, Code2
 } from 'lucide-react';
 import { emailService } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ const EmailTemplates = () => {
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [currentTemplate, setCurrentTemplate] = useState({ name: '', subject: '', body: '' });
+  const [isSourceMode, setIsSourceMode] = useState(false);
 
   useEffect(() => {
     fetchTemplates();
@@ -46,6 +47,7 @@ const EmailTemplates = () => {
 
   const handleEdit = (template) => {
     setCurrentTemplate(template);
+    setIsSourceMode(template.body.includes('<html'));
     setShowEditor(true);
   };
 
@@ -185,15 +187,35 @@ const EmailTemplates = () => {
             </div>
 
             <div className="flex flex-col min-h-[500px]">
-              <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1 mb-2">Content Designer</label>
-              <div className="flex-1 bg-white border-2 border-gray-100 rounded-[2.5rem] overflow-hidden focus-within:border-blue-500 transition-all flex flex-col shadow-inner">
-                <ReactQuill 
-                  theme="snow" 
-                  value={currentTemplate.body}
-                  onChange={(content) => setCurrentTemplate({...currentTemplate, body: content})}
-                  modules={modules}
-                  className="flex-1 h-full quill-editor-template"
-                />
+              <div className="flex justify-between items-center mb-2 px-1">
+                <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Content Designer</label>
+                <button 
+                  onClick={() => setIsSourceMode(!isSourceMode)}
+                  className={`p-2.5 rounded-xl border transition-all flex items-center space-x-2 ${
+                    isSourceMode ? 'bg-gray-900 border-gray-900 text-white' : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200 shadow-sm'
+                  }`}
+                >
+                  <Code2 className="w-4 h-4" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">{isSourceMode ? 'Visual Mode' : 'Source Mode'}</span>
+                </button>
+              </div>
+              <div className="flex-1 bg-white border-2 border-gray-100 rounded-[2.5rem] overflow-hidden focus-within:border-blue-500 transition-all flex flex-col shadow-inner min-h-[400px]">
+                {isSourceMode ? (
+                  <textarea
+                    className="flex-1 w-full p-8 font-mono text-sm bg-gray-900 text-blue-400 border-none outline-none resize-none custom-scrollbar"
+                    value={currentTemplate.body}
+                    onChange={(e) => setCurrentTemplate({...currentTemplate, body: e.target.value})}
+                    placeholder="Paste your professional HTML code here..."
+                  />
+                ) : (
+                  <ReactQuill 
+                    theme="snow" 
+                    value={currentTemplate.body}
+                    onChange={(content) => setCurrentTemplate({...currentTemplate, body: content})}
+                    modules={modules}
+                    className="flex-1 h-full quill-editor-template"
+                  />
+                )}
               </div>
             </div>
           </div>
