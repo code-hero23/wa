@@ -90,4 +90,7 @@ emailWorker.on("failed", (job, err) => {
   console.log(`[EMAIL WORKER] Job ${job.id} failed: ${err.message}`);
 });
 
+
+console.log("🚀 Email Marketing Worker Started and Listening for Jobs...");
+
 module.exports = emailWorker;

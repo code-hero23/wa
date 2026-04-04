@@ -84,4 +84,7 @@ messageWorker.on("failed", (job, err) => {
   console.log(`Job ${job.id} failed with error: ${err.message}`);
 });
 
+
+console.log("🚀 WhatsApp Message Worker Started and Listening for Jobs...");
+
 module.exports = messageWorker;
