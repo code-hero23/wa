@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 import { 
   Plus, Edit2, Trash2, Layout, Copy, Save, X, Search,
   CheckCircle, FileText, Mail, Info, ArrowLeft

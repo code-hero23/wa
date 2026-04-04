@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ReactQuill from 'react-quill-new';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 import { 
   Plus, Send, Eye, Clock, CheckCircle, AlertCircle, 
   Users, Layout, Type, ArrowRight, ArrowLeft, X, 
