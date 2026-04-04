@@ -26,6 +26,7 @@ const EmailCampaigns = () => {
     scheduledAt: null
   });
 
+  const [availableContacts, setAvailableContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
