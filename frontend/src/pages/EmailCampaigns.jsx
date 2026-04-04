@@ -26,8 +26,8 @@ const EmailCampaigns = () => {
     scheduledAt: null
   });
 
-  const [availableContacts, setAvailableContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchCampaigns();
@@ -47,6 +47,7 @@ const EmailCampaigns = () => {
   const startWizard = async () => {
     setShowCreateWizard(true);
     setStep(1);
+    setFormData({ name: '', subject: '', body: '', templateId: null, contactIds: [], grouping: '', scheduledAt: null });
     try {
       const [cRes, tRes] = await Promise.all([
         contactService.getAll(),
@@ -57,6 +58,27 @@ const EmailCampaigns = () => {
     } catch (err) {
       console.error('Data pre-fetch failed', err);
     }
+  };
+
+  const toggleSelect = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      contactIds: prev.contactIds.includes(id)
+        ? prev.contactIds.filter(i => i !== id)
+        : [...prev.contactIds, id]
+    }));
+  };
+
+  const toggleSelectAll = () => {
+    const filtered = availableContacts.filter(c => 
+      c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setFormData(prev => ({
+      ...prev,
+      contactIds: prev.contactIds.length === filtered.length ? [] : filtered.map(c => c.id)
+    }));
   };
 
   const handleCreate = async () => {
@@ -194,53 +216,114 @@ const EmailCampaigns = () => {
                       exit={{ opacity: 0, x: -20 }}
                       className="max-w-2xl mx-auto space-y-8"
                     >
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Campaign Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g., Summer Furniture Offer 2026"
-                          className="w-full px-6 py-5 bg-white border-2 border-transparent border-gray-100 rounded-3xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-gray-700 font-bold text-lg"
-                          value={formData.name}
-                          onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Email Subject Line</label>
-                        <input 
-                          type="text" 
-                          placeholder="Don't miss out on our limited time offer! 🎉"
-                          className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-3xl focus:border-blue-500 transition-all text-gray-700 font-bold"
-                          value={formData.subject}
-                          onChange={(e) => setFormData({...formData, subject: e.target.value})}
-                        />
-                      </div>
-                      <div className="space-y-4">
-                        <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Select Recipients</label>
-                        <div className="grid grid-cols-2 gap-4">
-                          <button 
-                            onClick={() => setFormData({...formData, grouping: 'Leads'})}
-                            className={`p-6 rounded-3xl border-2 transition-all flex items-center space-x-4 ${
-                              formData.grouping === 'Leads' ? 'border-blue-600 bg-blue-50' : 'border-gray-100 bg-white hover:border-blue-200'
-                            }`}
-                          >
-                            <Mail className={`w-8 h-8 ${formData.grouping === 'Leads' ? 'text-blue-600' : 'text-gray-400'}`} />
-                            <div className="text-left">
-                              <p className="font-black text-gray-900">Send to Leads</p>
-                              <p className="text-xs text-gray-500">Target all current potential leads.</p>
-                            </div>
-                          </button>
-                          <button 
-                             onClick={() => setFormData({...formData, grouping: 'Customers'})}
-                             className={`p-6 rounded-3xl border-2 transition-all flex items-center space-x-4 ${
-                              formData.grouping === 'Customers' ? 'border-green-600 bg-green-50' : 'border-gray-100 bg-white hover:border-green-200'
-                            }`}
-                          >
-                            <Target className={`w-8 h-8 ${formData.grouping === 'Customers' ? 'text-green-600' : 'text-gray-400'}`} />
-                            <div className="text-left">
-                              <p className="font-black text-gray-900">Send to Customers</p>
-                              <p className="text-xs text-gray-500">Engage your existing client base.</p>
-                            </div>
-                          </button>
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start h-full">
+                        {/* Left: Campaign Details */}
+                        <div className="space-y-8 h-full">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Campaign Name</label>
+                            <input 
+                              type="text" 
+                              placeholder="e.g., Summer Furniture Offer 2026"
+                              className="w-full px-6 py-5 bg-white border-2 border-transparent border-gray-100 rounded-3xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 transition-all text-gray-900 font-bold text-lg shadow-sm"
+                              value={formData.name}
+                              onChange={(e) => setFormData({...formData, name: e.target.value})}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Subject Line</label>
+                            <input 
+                              type="text" 
+                              placeholder="Don't miss out on our limited time offer! 🎉"
+                              className="w-full px-6 py-5 bg-white border-2 border-gray-100 rounded-3xl focus:border-blue-500 transition-all text-gray-900 font-bold shadow-sm"
+                              value={formData.subject}
+                              onChange={(e) => setFormData({...formData, subject: e.target.value})}
+                            />
+                          </div>
+
+                          <div className="p-8 bg-blue-50/50 rounded-[2.5rem] border border-blue-100 mt-auto">
+                             <div className="flex items-center space-x-4 mb-4">
+                               <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-50">
+                                 <Users className="w-6 h-6" />
+                               </div>
+                               <div>
+                                 <h4 className="text-lg font-black text-gray-900">Blast Summary</h4>
+                                 <p className="text-xs font-bold text-blue-600 uppercase">Configuration Status</p>
+                               </div>
+                             </div>
+                             <div className="space-y-3">
+                               <div className="flex justify-between items-center bg-white/70 p-4 rounded-2xl border border-white/50">
+                                 <span className="text-sm font-bold text-gray-500">Recipients Selected</span>
+                                 <span className="text-xl font-black text-blue-600">{formData.contactIds.length}</span>
+                               </div>
+                               <p className="text-[11px] font-medium text-gray-500 italic pl-2">
+                                 {formData.contactIds.length === 0 ? "⚠️ Please select at least one recipient." : "🚀 Looks good! Ready for content design."}
+                               </p>
+                             </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Recipient Selection with Checkboxes */}
+                        <div className="h-[550px] flex flex-col bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden p-6">
+                           <div className="flex items-center justify-between mb-6 px-2">
+                              <h3 className="font-black text-gray-900 uppercase tracking-widest text-[11px]">Select Recipients</h3>
+                              <button 
+                                onClick={toggleSelectAll}
+                                className="text-blue-600 text-[11px] font-black uppercase hover:underline"
+                              >
+                                {formData.contactIds.length === availableContacts.length && availableContacts.length > 0 ? "Deselect All" : "Select All"}
+                              </button>
+                           </div>
+
+                           <div className="relative mb-6">
+                              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                              <input 
+                                type="text"
+                                placeholder="Search by name or email..."
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none transition-all font-bold text-sm"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                              />
+                           </div>
+
+                           <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                              {availableContacts.filter(c => 
+                                c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                c.email?.toLowerCase().includes(searchTerm.toLowerCase())
+                              ).map((contact) => (
+                                <div 
+                                  key={contact.id}
+                                  onClick={() => toggleSelect(contact.id)}
+                                  className={`flex items-center justify-between p-4 rounded-[1.5rem] border transition-all cursor-pointer group ${
+                                    formData.contactIds.includes(contact.id) 
+                                    ? 'bg-blue-600 border-blue-600 text-white' 
+                                    : 'bg-white border-gray-100 hover:border-blue-200'
+                                  }`}
+                                >
+                                  <div className="flex items-center space-x-4">
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${
+                                      formData.contactIds.includes(contact.id) ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-400'
+                                    }`}>
+                                      {contact.name?.charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <p className={`text-sm font-black ${formData.contactIds.includes(contact.id) ? 'text-white' : 'text-gray-900'}`}>
+                                        {contact.name}
+                                      </p>
+                                      <p className={`text-[11px] font-medium ${formData.contactIds.includes(contact.id) ? 'text-white/70' : 'text-gray-400'}`}>
+                                        {contact.email}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+                                    formData.contactIds.includes(contact.id) 
+                                    ? 'bg-white border-white text-blue-600' 
+                                    : 'bg-white border-gray-200 group-hover:border-blue-300'
+                                  }`}>
+                                    {formData.contactIds.includes(contact.id) && <CheckCircle className="w-4 h-4 fill-current" />}
+                                  </div>
+                                </div>
+                              ))}
+                           </div>
                         </div>
                       </div>
                     </motion.div>
