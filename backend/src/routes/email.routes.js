@@ -17,5 +17,6 @@ router.delete('/templates/:id', authMiddleware, emailController.deleteEmailTempl
 // SMTP Settings (Admin only)
 router.get('/smtp', authMiddleware, emailController.getSmtpSettings);
 router.post('/smtp', authMiddleware, emailController.updateSmtpSettings);
+router.post('/test-send', authMiddleware, emailController.testSendEmail);
 
 module.exports = router;

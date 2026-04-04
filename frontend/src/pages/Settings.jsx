@@ -14,6 +14,10 @@ const Settings = () => {
   const [showAddEmployee, setShowAddEmployee] = useState(false);
   const [newEmployee, setNewEmployee] = useState({ name: '', email: '', password: '', role: 'employee' });
 
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testToEmail, setTestToEmail] = useState('');
+  const [testLoading, setTestLoading] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -41,6 +45,22 @@ const Settings = () => {
       fetchData();
     } catch (err) {
       alert('Failed to save SMTP');
+    }
+  };
+
+  const handleTestSend = async (e) => {
+    e.preventDefault();
+    if (!testToEmail) return;
+    try {
+      setTestLoading(true);
+      await emailService.testSendEmail(testToEmail);
+      alert('Success! Test email sent.');
+      setShowTestModal(false);
+      setTestToEmail('');
+    } catch (err) {
+      alert('Failed to send test email: ' + (err.response?.data?.error || err.message));
+    } finally {
+      setTestLoading(false);
     }
   };
 
@@ -207,7 +227,10 @@ const Settings = () => {
                  <p className="text-sm text-gray-500 mt-6 leading-relaxed font-medium">
                    Your SMTP gateway is successfully connected. You can now start sending campaigns to your contacts.
                  </p>
-                 <button className="mt-8 text-blue-600 text-xs font-black uppercase tracking-widest flex items-center hover:underline">
+                 <button 
+                  onClick={() => setShowTestModal(true)}
+                  className="mt-8 text-blue-600 text-xs font-black uppercase tracking-widest flex items-center hover:underline"
+                 >
                    <RefreshCw className="w-4 h-4 mr-2" /> Send Test Email
                  </button>
               </div>
@@ -322,6 +345,50 @@ const Settings = () => {
                   <button type="submit" className="flex-1 py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all">Create Account</button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Test Email Modal */}
+      <AnimatePresence>
+        {showTestModal && (
+          <div className="fixed inset-0 z-[100] bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              <div className="p-10 space-y-8">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-black text-gray-900">Send Test Email</h2>
+                  <button onClick={() => setShowTestModal(false)} className="p-2 hover:bg-gray-100 rounded-full transition-all">
+                    <X className="w-8 h-8 text-gray-400" />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Recipient Email</label>
+                  <input 
+                    type="email" 
+                    placeholder="your-email@example.com"
+                    className="w-full px-6 py-4 bg-gray-50 border-2 border-gray-100 rounded-2xl focus:border-blue-500 font-bold outline-none transition-all"
+                    value={testToEmail}
+                    onChange={(e) => setTestToEmail(e.target.value)}
+                  />
+                </div>
+                <div className="flex space-x-4 pt-4">
+                  <button onClick={() => setShowTestModal(false)} className="flex-1 py-5 bg-gray-50 text-gray-600 font-black rounded-2xl hover:bg-gray-100 transition-all">Cancel</button>
+                  <button 
+                    onClick={handleTestSend}
+                    disabled={testLoading}
+                    className="flex-1 py-5 bg-blue-600 text-white font-black rounded-2xl shadow-xl shadow-blue-100 hover:bg-blue-700 transition-all flex items-center justify-center space-x-2"
+                  >
+                    {testLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                    <span>{testLoading ? 'Sending...' : 'Send Test'}</span>
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

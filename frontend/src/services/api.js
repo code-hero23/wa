@@ -37,6 +37,7 @@ export const emailService = {
   deleteTemplate: (id) => api.delete(`/email/templates/${id}`),
   getSmtp: () => api.get('/email/smtp'),
   updateSmtp: (data) => api.post('/email/smtp', data),
+  testSendEmail: (to) => api.post('/email/test-send', { to }),
 };
 
 export const contactService = {

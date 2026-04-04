@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const emailQueue = require('../queues/email.queue');
 const { v4: uuidv4 } = require('uuid');
+const emailService = require('../services/email.service');
 
 /**
  * Campaigns
@@ -171,5 +172,30 @@ exports.updateSmtpSettings = async (req, res) => {
   } catch (err) {
     console.error('SMTP update error:', err);
     res.status(500).json({ error: 'Failed to update SMTP settings' });
+  }
+};
+
+exports.testSendEmail = async (req, res) => {
+  const { to } = req.body;
+  if (!to) return res.status(400).json({ error: 'Recipient email is required' });
+
+  try {
+    await emailService.sendEmail({
+      to,
+      subject: 'Test Email from BlastApp 🚀',
+      body: `
+        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #2563eb;">Hello!</h2>
+          <p>This is a test email sent from your **BlastApp** Mail System.</p>
+          <p>If you are reading this, your SMTP settings are configured correctly and the system is ready to launch campaigns.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #666;">Sent at: ${new Date().toLocaleString()}</p>
+        </div>
+      `
+    });
+    res.json({ success: true, message: 'Test email sent successfully' });
+  } catch (err) {
+    console.error('Test email error:', err);
+    res.status(500).json({ error: 'Failed to send test email: ' + err.message });
   }
 };
