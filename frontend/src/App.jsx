@@ -74,104 +74,115 @@ function App() {
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
         <Route path="*" element={
           <ProtectedRoute isAuthenticated={isAuthenticated} isLoading={isLoading}>
-            <div className="min-h-screen bg-gray-50 flex">
-              {/* Sidebar */}
-              <aside className="w-72 bg-white border-r border-gray-100 hidden md:flex flex-col shadow-sm">
-                <div className="p-8">
-                  <div className="flex items-center space-x-3 text-blue-600 mb-2">
-                    <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-100">
-                      <Rocket className="w-6 h-6" />
-                    </div>
-                    <span className="text-2xl font-black tracking-tighter text-gray-900 italic">BlastApp</span>
-                  </div>
-                </div>
-                
-                <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-4">
-                  {/* WhatsApp Section */}
-                  <div>
-                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">WhatsApp System</h3>
-                    <div className="space-y-1">
-                      <NavItem to="/" icon={<LayoutDashboard className="w-5 h-5" />} label="WA Dashboard" />
-                      <NavItem to="/chat" icon={<MessageSquare className="w-5 h-5" />} label="Live Chat" />
-                      <NavItem to="/wa-campaign" icon={<Rocket className="w-5 h-5" />} label="WA Campaign" />
-                    </div>
-                  </div>
-
-                  {/* Email Section */}
-                  <div>
-                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Email Marketing</h3>
-                    <div className="space-y-1">
-                      <NavItem to="/email-dashboard" icon={<BarChart3Icon className="w-5 h-5" />} label="Email Stats" />
-                      <NavItem to="/email-campaigns" icon={<Mail className="w-5 h-5" />} label="Mail Blasts" />
-                      <NavItem to="/email-templates" icon={<Layout className="w-5 h-5" />} label="Templates" />
-                    </div>
-                  </div>
-
-                  {/* CRM Section */}
-                  <div>
-                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Contacts & Data</h3>
-                    <div className="space-y-1">
-                      <NavItem to="/contacts" icon={<Users className="w-5 h-5" />} label="Contact List" />
-                      <NavItem to="/wa-logs" icon={<ClipboardList className="w-5 h-5" />} label="WA History" />
-                    </div>
-                  </div>
-
-                  {/* System Section */}
-                  <div>
-                    <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Administration</h3>
-                    <div className="space-y-1">
-                      <NavItem to="/settings" icon={<SettingsIcon className="w-5 h-5" />} label="Configuration" />
-                    </div>
-                  </div>
-                </nav>
-
-                {/* Footer User Profile */}
-                <div className="p-6 border-t border-gray-100">
-                  <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-3xl border border-gray-100/50">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md">
-                        {user?.name?.charAt(0).toUpperCase() || 'A'}
-                      </div>
-                      <div>
-                        <p className="text-sm font-black text-gray-900 leading-none mb-1">{user?.name || 'Admin'}</p>
-                        <div className="flex items-center space-x-1">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                          <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">{user?.role || 'Admin'}</p>
-                        </div>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={handleLogout}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                    >
-                      <LogOut className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              </aside>
-
-              {/* Main Content */}
-              <main className="flex-1 overflow-y-auto bg-[#FBFBFF]">
-                {/* Mobile Header */}
-                <header className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-50">
-                   <div className="flex items-center space-x-2 text-blue-600">
-                    <Rocket className="w-6 h-6" />
-                    <span className="text-lg font-bold text-gray-900 uppercase italic">BlastApp</span>
-                  </div>
-                  <Menu className="w-6 h-6 text-gray-600" />
-                </header>
-
-                <div className="p-0 md:p-10 lg:p-12 max-w-[1600px] mx-auto min-h-screen">
-                   <AnimatedRoutes />
-                </div>
-              </main>
-            </div>
+            <MainLayout user={user} handleLogout={handleLogout}>
+               <AnimatedRoutes />
+            </MainLayout>
           </ProtectedRoute>
         } />
       </Routes>
     </Router>
   );
 }
+
+const MainLayout = ({ user, handleLogout, children }) => {
+  const location = useLocation();
+  const isChatPage = location.pathname === '/chat';
+
+  return (
+    <div className={`h-screen bg-gray-50 flex overflow-hidden`}>
+      {/* Sidebar */}
+      <aside className="w-72 bg-white border-r border-gray-100 hidden md:flex flex-col shadow-sm">
+        <div className="p-8">
+          <div className="flex items-center space-x-3 text-blue-600 mb-2">
+            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-100">
+              <Rocket className="w-6 h-6" />
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-gray-900 italic">BlastApp</span>
+          </div>
+        </div>
+        
+        <nav className="flex-1 px-4 space-y-8 overflow-y-auto scrollbar-hide py-4">
+          {/* WhatsApp Section */}
+          <div>
+            <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">WhatsApp System</h3>
+            <div className="space-y-1">
+              <NavItem to="/" icon={<LayoutDashboard className="w-5 h-5" />} label="WA Dashboard" />
+              <NavItem to="/chat" icon={<MessageSquare className="w-5 h-5" />} label="Live Chat" />
+              <NavItem to="/wa-campaign" icon={<Rocket className="w-5 h-5" />} label="WA Campaign" />
+            </div>
+          </div>
+
+          {/* Email Section */}
+          <div>
+            <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Email Marketing</h3>
+            <div className="space-y-1">
+              <NavItem to="/email-dashboard" icon={<BarChart3Icon className="w-5 h-5" />} label="Email Stats" />
+              <NavItem to="/email-campaigns" icon={<Mail className="w-5 h-5" />} label="Mail Blasts" />
+              <NavItem to="/email-templates" icon={<Layout className="w-5 h-5" />} label="Templates" />
+            </div>
+          </div>
+
+          {/* CRM Section */}
+          <div>
+            <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Contacts & Data</h3>
+            <div className="space-y-1">
+              <NavItem to="/contacts" icon={<Users className="w-5 h-5" />} label="Contact List" />
+              <NavItem to="/wa-logs" icon={<ClipboardList className="w-5 h-5" />} label="WA History" />
+            </div>
+          </div>
+
+          {/* System Section */}
+          <div>
+            <h3 className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Administration</h3>
+            <div className="space-y-1">
+              <NavItem to="/settings" icon={<SettingsIcon className="w-5 h-5" />} label="Configuration" />
+            </div>
+          </div>
+        </nav>
+
+        {/* Footer User Profile */}
+        <div className="p-6 border-t border-gray-100">
+          <div className="flex items-center justify-between p-4 bg-gray-50/50 rounded-3xl border border-gray-100/50">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black shadow-md">
+                {user?.name?.charAt(0).toUpperCase() || 'A'}
+              </div>
+              <div>
+                <p className="text-sm font-black text-gray-900 leading-none mb-1">{user?.name || 'Admin'}</p>
+                <div className="flex items-center space-x-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                  <p className="text-[9px] text-gray-400 uppercase font-black tracking-widest">{user?.role || 'Admin'}</p>
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={handleLogout}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className={`flex-1 flex flex-col ${isChatPage ? 'overflow-hidden' : 'overflow-y-auto'} bg-[#FBFBFF]`}>
+        {/* Mobile Header */}
+        <header className="md:hidden bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-50">
+           <div className="flex items-center space-x-2 text-blue-600">
+            <Rocket className="w-6 h-6" />
+            <span className="text-lg font-bold text-gray-900 uppercase italic">BlastApp</span>
+          </div>
+          <Menu className="w-6 h-6 text-gray-600" />
+        </header>
+
+        <div className={`w-full max-w-[1600px] mx-auto flex-1 flex flex-col ${isChatPage ? 'h-full p-0 md:p-6 lg:p-8' : 'p-0 md:p-10 lg:p-12'}`}>
+           {children}
+        </div>
+      </main>
+    </div>
+  );
+};
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -183,7 +194,7 @@ const AnimatedRoutes = () => {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.3 }}
-        className="h-full"
+        className="h-full flex flex-col"
       >
         <Routes location={location}>
           <Route path="/" element={<Dashboard />} />
