@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Search, Send, Check, CheckCheck, MoreVertical, Paperclip, Smile, Phone, Video, Filter, ChevronLeft, ChevronDown, ListFilter, Inbox, Tag, MessageSquare, File, FileText, Download, User, ExternalLink } from 'lucide-react';
 import { chatService, campaignService } from '../services/api';
 import { format, isToday, isYesterday } from 'date-fns';
@@ -15,6 +15,8 @@ const Chat = () => {
   const [isCampaignDropdownOpen, setIsCampaignDropdownOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
   useEffect(() => {
     fetchChats();
@@ -25,6 +27,7 @@ const Chat = () => {
 
   useEffect(() => {
     if (activeChat) {
+      setShouldScrollToBottom(true);
       fetchMessages(activeChat.id);
       handleMarkRead(activeChat.id);
       const interval = setInterval(() => fetchMessages(activeChat.id), 5000);
@@ -33,8 +36,10 @@ const Chat = () => {
   }, [activeChat]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (shouldScrollToBottom) {
+      scrollToBottom();
+    }
+  }, [messages, shouldScrollToBottom]);
 
   const fetchCampaigns = async () => {
     try {
@@ -110,7 +115,14 @@ const Chat = () => {
     return groups;
   };
 
-  const messageGroups = groupMessagesByDate(messages);
+  const messageGroups = useMemo(() => groupMessagesByDate(messages), [messages]);
+
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    // If user is within 150px of the bottom, enable auto-scroll
+    const isAtBottom = scrollHeight - scrollTop - clientHeight < 150;
+    setShouldScrollToBottom(isAtBottom);
+  };
 
   return (
     <div className="flex h-[calc(100vh-8rem)] bg-white rounded-2xl overflow-hidden shadow-2xl border border-gray-100/50 font-sans">
@@ -281,7 +293,11 @@ const Chat = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 md:px-12 space-y-1 relative z-10 scroll-smooth custom-scrollbar">
+          <div 
+            ref={chatContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto p-4 md:px-12 space-y-1 relative z-10 custom-scrollbar"
+          >
             {Object.entries(messageGroups).map(([date, groupMsgs]) => (
               <React.Fragment key={date}>
                 <div className="flex justify-center my-6 sticky top-2 z-20">
@@ -310,7 +326,8 @@ const Chat = () => {
                             <img 
                               src={msg.content.startsWith('http') ? msg.content : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${msg.content}`}
                               alt="Message" 
-                              className="rounded-lg max-w-full h-auto object-cover max-h-72 shadow-sm border border-black/5"
+                              className="rounded-lg max-w-full h-auto object-cover max-h-72 shadow-sm border border-black/5 min-h-[150px] bg-gray-50/50"
+                              loading="lazy"
                               onClick={() => window.open(msg.content.startsWith('http') ? msg.content : `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}${msg.content}`, '_blank')}
                             />
                           </div>
