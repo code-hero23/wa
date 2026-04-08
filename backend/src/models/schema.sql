@@ -3,7 +3,11 @@
 CREATE TABLE IF NOT EXISTS contacts (
   id SERIAL PRIMARY KEY,
   name TEXT,
+  email TEXT,
   phone TEXT UNIQUE NOT NULL,
+  project_name TEXT,
+  location TEXT,
+  grouping TEXT,
   tags TEXT[],
   last_message TEXT,
   last_message_at TIMESTAMP,
