@@ -31,6 +31,10 @@ const EmailCampaigns = () => {
   const [availableContacts, setAvailableContacts] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTags, setActiveTags] = useState([]);
+
+  // Computed: Unique tags from all contacts
+  const allUniqueTags = [...new Set(availableContacts.flatMap(c => c.tags || []))].sort();
 
   useEffect(() => {
     fetchCampaigns();
@@ -70,6 +74,31 @@ const EmailCampaigns = () => {
         ? prev.contactIds.filter(i => i !== id)
         : [...prev.contactIds, id]
     }));
+  };
+
+  const toggleTag = (tag) => {
+    const isAlreadyActive = activeTags.includes(tag);
+    const newActiveTags = isAlreadyActive 
+      ? activeTags.filter(t => t !== tag)
+      : [...activeTags, tag];
+      
+    setActiveTags(newActiveTags);
+
+    // Auto-select contacts matching these tags
+    if (!isAlreadyActive) {
+      const matchingIds = availableContacts
+        .filter(c => c.tags?.includes(tag))
+        .map(c => c.id);
+      
+      setFormData(prev => ({
+        ...prev,
+        contactIds: [...new Set([...prev.contactIds, ...matchingIds])]
+      }));
+    } else {
+      // If we deselect a tag, we might want to keep the contacts if they were manually selected,
+      // but usually the "bulk" expectation is to deselect them if they ONLY matched that tag.
+      // However, for simplicity and safety, we'll just leave them selected once added.
+    }
   };
 
   const toggleSelectAll = () => {
@@ -272,17 +301,49 @@ const EmailCampaigns = () => {
                           </div>
                         </div>
 
-                        {/* Right: Recipient Selection with Checkboxes */}
-                        <div className="h-[550px] flex flex-col bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden p-6">
-                           <div className="flex items-center justify-between mb-6 px-2">
-                              <h3 className="font-black text-gray-900 uppercase tracking-widest text-[11px]">Select Recipients</h3>
-                              <button 
-                                onClick={toggleSelectAll}
-                                className="text-blue-600 text-[11px] font-black uppercase hover:underline"
-                              >
-                                {formData.contactIds.length === availableContacts.length && availableContacts.length > 0 ? "Deselect All" : "Select All"}
-                              </button>
-                           </div>
+                         <div className="h-[550px] flex flex-col bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden p-6">
+                            <div className="flex items-center justify-between mb-6 px-2">
+                               <h3 className="font-black text-gray-900 uppercase tracking-widest text-[11px]">Select Recipients</h3>
+                               <div className="flex items-center space-x-4">
+                                 <button 
+                                   onClick={() => {
+                                     setFormData(prev => ({ ...prev, contactIds: [] }));
+                                     setActiveTags([]);
+                                   }}
+                                   className="text-red-500 text-[10px] font-black uppercase hover:underline"
+                                 >
+                                   Clear
+                                 </button>
+                                 <button 
+                                   onClick={toggleSelectAll}
+                                   className="text-blue-600 text-[10px] font-black uppercase hover:underline"
+                                 >
+                                   {formData.contactIds.length === availableContacts.length && availableContacts.length > 0 ? "Deselect All" : "Select All"}
+                                 </button>
+                               </div>
+                            </div>
+ 
+                            {/* Tag Quick Filters */}
+                            {allUniqueTags.length > 0 && (
+                              <div className="mb-6 px-2">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 ml-1">Quick Select by Tag</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {allUniqueTags.map(tag => (
+                                    <button
+                                      key={tag}
+                                      onClick={() => toggleTag(tag)}
+                                      className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border ${
+                                        activeTags.includes(tag) 
+                                        ? 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-100' 
+                                        : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-white hover:border-blue-200'
+                                      }`}
+                                    >
+                                      #{tag}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                            <div className="relative mb-6">
                               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -295,11 +356,15 @@ const EmailCampaigns = () => {
                               />
                            </div>
 
-                           <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-                              {availableContacts.filter(c => 
-                                c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-                              ).map((contact) => (
+                            <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                               {/* List of Contacts */}
+                               {availableContacts.filter(c => 
+                                 (searchTerm === '' || 
+                                  c.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                  c.email?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                                 (activeTags.length === 0 || 
+                                  activeTags.some(tag => c.tags?.includes(tag)))
+                               ).map((contact) => (
                                 <div 
                                   key={contact.id}
                                   onClick={() => toggleSelect(contact.id)}
