@@ -88,6 +88,9 @@ exports.importContacts = async (req, res) => {
   const filePath = req.file.path;
   const workbook = new ExcelJS.Workbook();
 
+  console.log(`--- Starting import for file: ${req.file.originalname} ---`);
+  console.log(`File path: ${filePath}`);
+
   try {
     if (req.file.originalname.endsWith('.csv')) {
       await workbook.csv.readFile(filePath);

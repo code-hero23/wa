@@ -2,11 +2,18 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 // Start workers
 require("./workers/message.worker");
 require("./workers/email.worker");
 
 const app = express();
+
+// Ensure tmp directory exists for uploads
+const tmpDir = path.join(__dirname, '../tmp');
+if (!fs.existsSync(tmpDir)) {
+  fs.mkdirSync(tmpDir, { recursive: true });
+}
 
 app.use(cors());
 app.use(express.json());
