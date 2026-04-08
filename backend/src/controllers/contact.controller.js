@@ -101,18 +101,31 @@ exports.importContacts = async (req, res) => {
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber === 1) return; // Skip header
 
-      const name = row.getCell(1).text;
-      const email = row.getCell(2).text;
-      const phone = row.getCell(3).text;
-      const project_name = row.getCell(4).text;
-      const location = row.getCell(5).text;
-      const grouping = row.getCell(6).text || 'Leads';
-      const tags = row.getCell(7).text ? row.getCell(7).text.split(',').map(t => t.trim()) : [];
+      try {
+        const name = row.getCell(1).value?.toString() || '';
+        const email = row.getCell(2).value?.toString() || '';
+        const phone = row.getCell(3).value?.toString() || '';
+        const project_name = row.getCell(4).value?.toString() || '';
+        const location = row.getCell(5).value?.toString() || '';
+        const grouping = row.getCell(6).value?.toString() || 'Leads';
+        
+        let tags = [];
+        const rawTags = row.getCell(7).value;
+        if (rawTags) {
+          tags = rawTags.toString().split(',').map(t => t.trim()).filter(t => t);
+        }
 
-      if (phone) {
-        contacts.push({ name, email, phone, project_name, location, grouping, tags });
+        if (phone && phone.trim().length > 0) {
+          contacts.push({ name, email, phone: phone.trim(), project_name, location, grouping, tags });
+        }
+      } catch (rowErr) {
+        console.warn(`Skipping row ${rowNumber} due to error:`, rowErr.message);
       }
     });
+
+    if (contacts.length === 0) {
+      throw new Error('No valid contacts found in file. Ensure the Phone column (Column 3) is populated.');
+    }
 
     // Bulk Insert (simplified for now with a loop, could be optimized)
     for (const contact of contacts) {
