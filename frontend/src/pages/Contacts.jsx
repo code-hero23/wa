@@ -334,7 +334,88 @@ const Contacts = () => {
             </motion.div>
           </motion.div>
         )}
+        {showImportModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-gray-900/40 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden"
+            >
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-black text-gray-900">Import Contacts</h2>
+                  <button onClick={() => setShowImportModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="p-6 bg-blue-50 rounded-[2rem] border border-blue-100">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-white p-3 rounded-2xl shadow-sm border border-blue-50 text-blue-600">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-gray-900">CSV Template Requirement</h4>
+                        <p className="text-sm text-gray-600 mt-1 leading-relaxed">
+                          Please ensure your file follows the required column order:
+                          <span className="block mt-2 font-bold text-[11px] uppercase tracking-tighter text-blue-600">
+                            Name, Email, Phone, Project, Location, Group, Tags
+                          </span>
+                        </p>
+                        <a 
+                          href="/sample_contacts.csv" 
+                          download
+                          className="inline-flex items-center mt-4 text-sm font-black text-blue-600 hover:underline"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Sample CSV
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <input 
+                      type="file" 
+                      accept=".csv, .xlsx"
+                      onChange={handleImport}
+                      className="hidden"
+                      id="csv-upload"
+                    />
+                    <label 
+                      htmlFor="csv-upload"
+                      className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-[2.5rem] hover:border-blue-400 hover:bg-blue-50/50 cursor-pointer transition-all group"
+                    >
+                      <div className="bg-gray-50 p-4 rounded-2xl group-hover:scale-110 group-hover:bg-blue-100 transition-all mb-4">
+                        <Upload className="w-8 h-8 text-gray-400 group-hover:text-blue-600" />
+                      </div>
+                      <p className="font-bold text-gray-900">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-400 font-medium mt-1">Maximum file size: 10MB</p>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex justify-end">
+                  <button 
+                    onClick={() => setShowImportModal(false)}
+                    className="px-8 py-4 bg-gray-50 text-gray-600 font-bold rounded-2xl hover:bg-gray-100 transition-all"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
+
     </div>
   );
 };

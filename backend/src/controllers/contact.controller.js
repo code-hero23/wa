@@ -133,8 +133,16 @@ exports.importContacts = async (req, res) => {
     fs.unlinkSync(filePath); // Delete temp file
     res.json({ success: true, count: contacts.length });
   } catch (err) {
-    console.error('Import error:', err);
+    console.error('Import error details:', {
+      message: err.message,
+      stack: err.stack,
+      file: req.file ? req.file.originalname : 'no file'
+    });
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-    res.status(500).json({ error: 'Failed to import contacts' });
+    res.status(500).json({ 
+      error: 'Failed to import contacts', 
+      details: err.message,
+      suggestion: 'Please ensure your CSV follows the required column order: Name, Email, Phone, Project, Location, Group, Tags'
+    });
   }
 };
