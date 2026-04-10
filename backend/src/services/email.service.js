@@ -64,7 +64,7 @@ const sendEmail = async ({ to, subject, body, trackingId, campaignId, contactId 
   }
 
   const info = await transporter.sendMail({
-    from: `"${smtp.from_name || 'Mail Blast'}" <${smtp.from_email || smtp.user}>`,
+    from: `"${smtp.from_name || 'Cookscape'}" <${smtp.from_email || smtp.user}>`,
     to,
     subject,
     html: finalBody,
